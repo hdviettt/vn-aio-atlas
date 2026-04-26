@@ -53,7 +53,14 @@ breakdown with charts and methodology in **[FINDINGS.md](./FINDINGS.md)**.
 
 ## Live dashboard
 
-**[vn-aio-atlas-dashboard-production.up.railway.app](https://vn-aio-atlas-dashboard-production.up.railway.app)** — single-page interactive view of all 9 findings, reading directly from the Atlas Postgres. Updates whenever the data is reloaded.
+**[vn-aio-atlas-dashboard-production.up.railway.app](https://vn-aio-atlas-dashboard-production.up.railway.app)** — single-page interactive view of all 9 findings, reading directly from the Atlas Postgres. Per-vertical filter (`?vertical=banking`) and Vietnamese translation toggle (`?lang=vi`). Updates whenever the data is reloaded.
+
+## Report
+
+Long-form prose write-up of the findings:
+
+- **[report/REPORT.md](./report/REPORT.md)** — English, draft v0.1
+- **[report/REPORT_vi.md](./report/REPORT_vi.md)** — Vietnamese, draft v0.1 (rút gọn)
 
 ## Architecture
 
