@@ -469,6 +469,100 @@ def finding_9_cited_vs_uncited_features() -> pl.DataFrame | None:
     return result
 
 
+def finding_12_share_of_voice_over_time() -> pl.DataFrame | None:
+    """Citation share-of-voice over time, top-5 domain per vertical.
+
+    Reads atlas.f12. Renders a small-multiples line chart: one panel per
+    vertical, one line per top-5 domain, x-axis = month, y-axis = share %.
+    """
+    from atlas.db import atlas_conn
+
+    try:
+        with atlas_conn() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT vertical, domain, month::text, citations,
+                       vertical_total, share_pct, domain_rank
+                  FROM atlas.f12_share_of_voice_monthly
+                 ORDER BY vertical, domain_rank, month
+                """
+            )
+            rows = cur.fetchall()
+    except Exception as e:
+        console.log(f"  F12 skipped: {e}")
+        return None
+
+    if not rows:
+        console.log("  F12 has no rows — run load to populate")
+        return None
+
+    result = pl.DataFrame(
+        rows,
+        schema={
+            "vertical": pl.String,
+            "domain": pl.String,
+            "month": pl.String,
+            "citations": pl.Int64,
+            "vertical_total": pl.Int64,
+            "share_pct": pl.Float64,
+            "domain_rank": pl.Int64,
+        },
+        orient="row",
+    )
+
+    verticals = sorted(result["vertical"].unique().to_list())
+    n = len(verticals)
+    cols = 3
+    rows_g = (n + cols - 1) // cols
+    fig, axes = plt.subplots(rows_g, cols, figsize=(15, 3.6 * rows_g))
+    axes = axes.flatten() if rows_g > 1 else ([axes] if cols == 1 else axes)
+
+    palette = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
+
+    for i, vertical in enumerate(verticals):
+        ax = axes[i]
+        sub = result.filter(pl.col("vertical") == vertical)
+        # Get top-5 domains in rank order
+        domains = (
+            sub.group_by("domain")
+            .agg(pl.col("domain_rank").min().alias("rank"))
+            .sort("rank")["domain"]
+            .to_list()
+        )
+        for j, dom in enumerate(domains[:5]):
+            d_data = sub.filter(pl.col("domain") == dom).sort("month")
+            ax.plot(
+                d_data["month"].to_list(),
+                d_data["share_pct"].to_list(),
+                color=palette[j],
+                lw=2,
+                marker="o",
+                markersize=4,
+                label=dom[:28] + ("…" if len(dom) > 28 else ""),
+            )
+        ax.set_title(vertical, fontsize=11, weight="bold", loc="left")
+        ax.set_ylabel("share %", fontsize=9)
+        ax.tick_params(labelsize=8, axis="x", rotation=30)
+        ax.legend(fontsize=7, loc="upper right", frameon=False)
+        ax.grid(True, alpha=0.25)
+
+    for j in range(len(verticals), len(axes)):
+        axes[j].set_visible(False)
+
+    fig.suptitle(
+        "F12 — citation share-of-voice over time, top 5 domains per vertical",
+        weight="bold",
+        fontsize=14,
+        y=1.0,
+    )
+    fig.tight_layout()
+    out = CHARTS_DIR / "f12_share_of_voice_over_time.png"
+    fig.savefig(out, bbox_inches="tight")
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
 def finding_11_features_by_vertical() -> pl.DataFrame | None:
     """Per-vertical replication of F9.
 

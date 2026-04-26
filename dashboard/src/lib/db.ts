@@ -115,6 +115,16 @@ export type F11Row = {
   n_uncited: number;
 };
 
+export type F12Row = {
+  vertical: string;
+  domain: string;
+  month: string; // YYYY-MM-DD format
+  citations: number;
+  vertical_total: number;
+  share_pct: number;
+  domain_rank: number;
+};
+
 export async function getVerticals(): Promise<string[]> {
   const rows = await query<{ vertical: string }>(
     `SELECT vertical
@@ -298,3 +308,20 @@ export const f11 = () =>
        FROM atlas.f11_features_by_vertical
       ORDER BY vertical, feature`,
   );
+
+export const f12 = (vertical?: string) => {
+  if (vertical) {
+    return query<F12Row>(
+      `SELECT vertical, domain, month::text, citations, vertical_total, share_pct, domain_rank
+         FROM atlas.f12_share_of_voice_monthly
+        WHERE vertical = $1
+        ORDER BY domain_rank, month`,
+      [vertical],
+    );
+  }
+  return query<F12Row>(
+    `SELECT vertical, domain, month::text, citations, vertical_total, share_pct, domain_rank
+       FROM atlas.f12_share_of_voice_monthly
+      ORDER BY vertical, domain_rank, month`,
+  );
+};

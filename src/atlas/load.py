@@ -728,6 +728,75 @@ def compute_findings(conn: Connection) -> None:
             """
         )
 
+        # F12 — Citation share-of-voice over time. Monthly buckets, top-5
+        # domain per vertical, restricted to verticals with sufficient
+        # citations to make the time series meaningful.
+        cur.execute("TRUNCATE atlas.f12_share_of_voice_monthly")
+        cur.execute(
+            """
+            WITH cit AS (
+                SELECT k.vertical,
+                       a.domain,
+                       date_trunc('month', k.created_at)::date AS month
+                  FROM atlas.aio_citations a
+                  JOIN atlas.keyword_results k ON k.id = a.keyword_result_id
+                 WHERE k.vertical <> 'unknown'
+            ),
+            big_v AS (
+                SELECT vertical
+                  FROM cit
+                 GROUP BY vertical
+                HAVING COUNT(*) >= 5000
+            ),
+            top5 AS (
+                SELECT vertical, domain
+                  FROM (
+                    SELECT vertical, domain, COUNT(*) AS total,
+                           RANK() OVER (PARTITION BY vertical ORDER BY COUNT(*) DESC) AS r
+                      FROM cit
+                     WHERE vertical IN (SELECT vertical FROM big_v)
+                     GROUP BY vertical, domain
+                  ) ranked
+                 WHERE r <= 5
+            ),
+            monthly AS (
+                SELECT c.vertical, c.domain, c.month, COUNT(*)::int AS citations
+                  FROM cit c
+                  JOIN top5 t USING (vertical, domain)
+                 GROUP BY c.vertical, c.domain, c.month
+            ),
+            vertical_month_total AS (
+                SELECT vertical, month, COUNT(*)::int AS vertical_total
+                  FROM cit
+                 WHERE vertical IN (SELECT vertical FROM big_v)
+                 GROUP BY vertical, month
+            ),
+            ranked AS (
+                SELECT vertical, domain, SUM(citations) AS total_cit
+                  FROM monthly
+                 GROUP BY vertical, domain
+            ),
+            ranked_with_rank AS (
+                SELECT vertical, domain,
+                       RANK() OVER (PARTITION BY vertical ORDER BY total_cit DESC)::int AS domain_rank
+                  FROM ranked
+            )
+            INSERT INTO atlas.f12_share_of_voice_monthly
+                  (vertical, domain, month, citations, vertical_total, share_pct, domain_rank)
+            SELECT m.vertical,
+                   m.domain,
+                   m.month,
+                   m.citations,
+                   v.vertical_total,
+                   ROUND(100.0 * m.citations / NULLIF(v.vertical_total, 0)::numeric, 3),
+                   r.domain_rank
+              FROM monthly m
+              JOIN vertical_month_total v USING (vertical, month)
+              JOIN ranked_with_rank r     USING (vertical, domain)
+             ORDER BY vertical, domain_rank, month
+            """
+        )
+
         # F10 — AIO answer characteristics by vertical
         cur.execute("TRUNCATE atlas.f10_aio_characteristics_by_vertical")
         cur.execute(
@@ -776,7 +845,7 @@ def compute_findings(conn: Connection) -> None:
             (datetime.utcnow(),),
         )
 
-    console.log("  findings tables populated (F1-F11)")
+    console.log("  findings tables populated (F1-F12)")
 
 
 def run_load() -> None:

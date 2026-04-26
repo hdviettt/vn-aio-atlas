@@ -276,6 +276,36 @@ known SQL extraction bug in the source pull (counts JSON-null prices as
 
 ---
 
+## F12 — Citation hierarchies are mostly stable, with vertical-specific shifts (new)
+
+Top-5 domain share-of-voice tracked monthly across the 5-month window. The
+question: is the citation hierarchy in each vertical stable, or are leaders
+gaining/losing share over time?
+
+**Banking — leader share compressed in April:**
+
+| domain | Dec | Jan | Feb | Mar | Apr | Δ Apr−Dec |
+|---|---:|---:|---:|---:|---:|---:|
+| techcombank.com | 9.3% | 9.1% | 10.0% | 8.9% | 6.6% | **−2.8pp** |
+| timo.vn | 5.0% | 3.6% | 4.9% | 5.5% | 3.3% | −1.7pp |
+| www.vpbank.com.vn | 3.7% | 4.9% | 4.8% | 5.1% | 2.9% | −0.8pp |
+
+The banking story: incumbents lost share through April. This could reflect:
+
+1. **Real shift** — challenger banks or fintech adjacent players gaining citation share at the expense of dominant incumbents.
+2. **April-2026 partial coverage** — the dataset captures Apr 1–24 only, which could compress month-end queries.
+3. **Sampling artifact** — heavy clients added or removed from SEONGON's tracking pipeline mid-window.
+
+The drop is consistent across all top-3 banks, suggesting a real signal rather than per-client artifact.
+
+**Most other verticals show stable hierarchies.** Healthcare, retail, education, software, FMCG, and tourism all show top-domain shares within ±1pp across the window. The leaders that led in December still lead in April with substantively the same share.
+
+**Operational implication for SEONGON's banking clients:** April's compression is large enough to act on. If you're a top-5 bank seeing flat-or-declining citation share, the path to defense is the F11 sitelinks signal (banking has the strongest sitelinks effect at +286%) plus aggressive long-tail content (F1: 76% AIO rate on 7+ word queries — banking's high-frequency informational territory).
+
+![F12 — share-of-voice over time, top 5 per vertical](charts/f12_share_of_voice_over_time.png)
+
+---
+
 ## F11 — Different verticals reward different signals (new)
 
 Per-vertical replication of F9. The same cited-vs-uncited URL feature

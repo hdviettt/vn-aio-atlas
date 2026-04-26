@@ -10,6 +10,7 @@ import {
   f9,
   f10,
   f11,
+  f12,
   getCorpusSummary,
   getVerticals,
 } from "@/lib/db";
@@ -18,6 +19,7 @@ import { BarChartH } from "@/components/charts/BarChartH";
 import { BarChartV } from "@/components/charts/BarChartV";
 import { LineChart } from "@/components/charts/LineChart";
 import { Heatmap } from "@/components/charts/Heatmap";
+import { Sparkline } from "@/components/charts/Sparkline";
 import { StickyHeader } from "@/components/StickyHeader";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +98,7 @@ export default async function Home({
     f9Data,
     f10Data,
     f11Data,
+    f12Data,
   ] = await Promise.all([
     getCorpusSummary(),
     f1(vertical),
@@ -109,6 +112,7 @@ export default async function Home({
     f9(),
     f10(),
     f11(),
+    f12(vertical),
   ]);
 
   const f2Map = new Map(f2Data.map((r) => [r.metric, Number(r.value)]));
@@ -441,6 +445,94 @@ export default async function Home({
             })}
           </div>
           <p className="text-xs text-slate-500 mt-4">{tx(lang, "f9_caption")}</p>
+        </Section>
+
+        {/* F12 — share-of-voice over time */}
+        <Section
+          id="f12"
+          eyebrow={tx(lang, "f12_eyebrow")}
+          title={tx(lang, "f12_title")}
+          takeaway={tx(lang, "f12_takeaway")}
+        >
+          {(() => {
+            // Group by vertical, then by domain
+            const byVerticalDomain = new Map<
+              string,
+              Map<string, { month: string; share: number }[]>
+            >();
+            for (const r of f12Data) {
+              if (!byVerticalDomain.has(r.vertical))
+                byVerticalDomain.set(r.vertical, new Map());
+              const dmap = byVerticalDomain.get(r.vertical)!;
+              if (!dmap.has(r.domain)) dmap.set(r.domain, []);
+              dmap.get(r.domain)!.push({
+                month: r.month.slice(0, 7),
+                share: Number(r.share_pct),
+              });
+            }
+            const verticalsToShow = vertical
+              ? [vertical].filter((v) => byVerticalDomain.has(v))
+              : Array.from(byVerticalDomain.keys()).sort();
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
+                {verticalsToShow.map((v) => {
+                  const dmap = byVerticalDomain.get(v)!;
+                  const domainEntries = Array.from(dmap.entries())
+                    .map(([domain, points]) => {
+                      const sorted = [...points].sort((a, b) =>
+                        a.month.localeCompare(b.month),
+                      );
+                      const first = sorted[0]?.share ?? 0;
+                      const last = sorted[sorted.length - 1]?.share ?? 0;
+                      return {
+                        domain,
+                        points: sorted,
+                        first,
+                        last,
+                        delta: last - first,
+                      };
+                    })
+                    .sort((a, b) => b.last - a.last);
+                  return (
+                    <div key={v}>
+                      <div className="text-[11px] font-bold uppercase tracking-widest text-indigo-600 mb-2">
+                        {v}
+                      </div>
+                      <div className="space-y-1">
+                        {domainEntries.map((d) => (
+                          <div
+                            key={d.domain}
+                            className="grid grid-cols-[1fr_auto_auto_auto] gap-3 items-center text-sm border-b border-slate-100 py-1.5"
+                          >
+                            <span className="font-medium text-slate-900 truncate pr-2">
+                              {d.domain}
+                            </span>
+                            <Sparkline values={d.points.map((p) => p.share)} />
+                            <span className="tabular-nums text-xs text-slate-500 w-12 text-right">
+                              {d.last.toFixed(1)}%
+                            </span>
+                            <span
+                              className={`tabular-nums text-xs font-bold w-14 text-right ${
+                                d.delta > 0.3
+                                  ? "text-emerald-600"
+                                  : d.delta < -0.3
+                                    ? "text-rose-600"
+                                    : "text-slate-400"
+                              }`}
+                            >
+                              {d.delta >= 0 ? "+" : ""}
+                              {d.delta.toFixed(1)}pp
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          <p className="text-xs text-slate-500 mt-4">{tx(lang, "f12_caption")}</p>
         </Section>
 
         {/* F11 — heatmap */}

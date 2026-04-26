@@ -210,6 +210,22 @@ CREATE TABLE atlas.f11_features_by_vertical (
 CREATE INDEX idx_f11_vertical ON atlas.f11_features_by_vertical (vertical);
 CREATE INDEX idx_f11_feature  ON atlas.f11_features_by_vertical (feature);
 
+-- F12 — Citation share-of-voice over time. Monthly citation count
+-- for each top-N domain in each vertical, revealing whether the
+-- citation hierarchy is stable or shifting across the 5-month window.
+CREATE TABLE atlas.f12_share_of_voice_monthly (
+    vertical          text NOT NULL,
+    domain            text NOT NULL,
+    month             date NOT NULL,
+    citations         integer NOT NULL,
+    vertical_total    integer NOT NULL,  -- total citations in vertical that month
+    share_pct         numeric(6,3) NOT NULL,
+    domain_rank       integer NOT NULL,  -- this domain's overall rank within the vertical
+    PRIMARY KEY (vertical, domain, month)
+);
+CREATE INDEX idx_f12_vertical_month ON atlas.f12_share_of_voice_monthly (vertical, month);
+CREATE INDEX idx_f12_domain         ON atlas.f12_share_of_voice_monthly (domain);
+
 -- ─── Run metadata ────────────────────────────────────────────────────
 
 CREATE TABLE atlas.load_runs (

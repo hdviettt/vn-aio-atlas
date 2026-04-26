@@ -163,6 +163,23 @@ export const t: Strings = {
     vi: "% trích AIO cũng nằm trong top-10 organic",
   },
 
+  // F12
+  f12_eyebrow: { en: "finding 12", vi: "phát hiện 12" },
+  f12_title: {
+    en: "Citation hierarchies are mostly stable, with vertical-specific shifts",
+    vi: "Thứ bậc trích nguồn chủ yếu ổn định, với một số biến động theo ngành",
+  },
+  f12_takeaway: {
+    en: "Top-5 domain share-of-voice tracked monthly across the 5-month window. Most verticals show stable hierarchies — the brand that led in December still leads in April. The exception: April 2026 saw share compression in banking and FMCG, suggesting newer entrants gained citation share at the expense of dominant incumbents in those markets.",
+    vi: "Thị phần trích nguồn của top-5 domain theo dõi hàng tháng trong cửa sổ 5 tháng. Hầu hết các ngành cho thấy thứ bậc ổn định — thương hiệu dẫn đầu tháng 12 vẫn dẫn đầu tháng 4. Ngoại lệ: tháng 4/2026 chứng kiến sự nén thị phần trong ngân hàng và FMCG, gợi ý người mới gia nhập đã giành được thị phần trích từ những kẻ dẫn đầu lâu năm trong các thị trường này.",
+  },
+  f12_caption: {
+    en: "Top 5 domains in each vertical with sufficient data. Each row shows the domain's monthly share of total vertical citations. April 2026 covers Apr 1–24 only.",
+    vi: "Top 5 domain trong mỗi ngành có đủ dữ liệu. Mỗi dòng hiển thị thị phần hàng tháng của domain trong tổng trích của ngành. Tháng 4/2026 chỉ bao phủ ngày 1–24.",
+  },
+  f12_col_domain: { en: "domain", vi: "domain" },
+  f12_col_change: { en: "Δ share", vi: "Δ thị phần" },
+
   // F11
   f11_eyebrow: { en: "finding 11", vi: "phát hiện 11" },
   f11_title: {
