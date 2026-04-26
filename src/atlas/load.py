@@ -397,6 +397,66 @@ def compute_findings(conn: Connection) -> None:
             """
         )
 
+        # F8 — AIO ↔ top-10 overlap, per vertical
+        cur.execute("TRUNCATE atlas.f8_overlap_by_vertical")
+        cur.execute(
+            """
+            WITH big_verticals AS (
+                SELECT vertical
+                FROM atlas.keyword_results
+                WHERE vertical <> 'unknown'
+                GROUP BY vertical
+                HAVING COUNT(*) >= 1000
+            ),
+            cited AS (
+                SELECT a.keyword_result_id, k.vertical,
+                       COUNT(DISTINCT a.domain) AS n_cited
+                FROM atlas.aio_citations a
+                JOIN atlas.keyword_results k ON k.id = a.keyword_result_id
+                WHERE k.vertical IN (SELECT vertical FROM big_verticals)
+                GROUP BY a.keyword_result_id, k.vertical
+            ),
+            top10 AS (
+                SELECT keyword_result_id,
+                       COUNT(DISTINCT domain) AS n_top10
+                FROM atlas.organic_top10
+                GROUP BY keyword_result_id
+            ),
+            overlap AS (
+                SELECT a.keyword_result_id,
+                       COUNT(DISTINCT a.domain) AS n_overlap
+                FROM atlas.aio_citations a
+                INNER JOIN atlas.organic_top10 o
+                        ON a.keyword_result_id = o.keyword_result_id
+                       AND a.domain = o.domain
+                GROUP BY a.keyword_result_id
+            ),
+            joined AS (
+                SELECT c.vertical,
+                       c.n_cited,
+                       COALESCE(t.n_top10, 0) AS n_top10,
+                       COALESCE(ov.n_overlap, 0) AS n_overlap
+                FROM cited c
+                LEFT JOIN top10  t  USING (keyword_result_id)
+                LEFT JOIN overlap ov USING (keyword_result_id)
+            )
+            INSERT INTO atlas.f8_overlap_by_vertical
+                  (vertical, rows_analyzed, avg_cited, avg_top10, avg_overlap, pct_cited_in_top10)
+            SELECT
+                vertical,
+                COUNT(*) AS rows_analyzed,
+                AVG(n_cited) AS avg_cited,
+                AVG(n_top10) AS avg_top10,
+                AVG(n_overlap) AS avg_overlap,
+                AVG(CASE WHEN n_cited > 0
+                         THEN n_overlap::float / n_cited
+                         ELSE 0 END) AS pct_cited_in_top10
+            FROM joined
+            GROUP BY vertical
+            ORDER BY pct_cited_in_top10 DESC
+            """
+        )
+
         # Run metadata
         cur.execute(
             """
@@ -409,7 +469,7 @@ def compute_findings(conn: Connection) -> None:
             (datetime.utcnow(),),
         )
 
-    console.log("  findings tables populated (F1-F7)")
+    console.log("  findings tables populated (F1-F8)")
 
 
 def run_load() -> None:

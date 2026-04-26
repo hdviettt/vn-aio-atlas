@@ -172,6 +172,45 @@ genuinely pulling from a long tail in construction-related queries.
 
 ---
 
+## F8 — AIO ↔ top-10 overlap varies sharply by vertical (new)
+
+The global F2 number (59.4% of AIO citations come from organic top-10) hides
+substantial vertical-level variance. Slicing by vertical reveals two distinct
+behaviors:
+
+| vertical | rows | avg cited | avg top-10 | % in top-10 |
+|---|---:|---:|---:|---:|
+| healthcare | 17,330 | 7.32 | 7.76 | **66.9%** |
+| jewelry | 1,230 | 5.88 | 7.86 | 64.9% |
+| fintech | 9,306 | 6.47 | 7.71 | 64.3% |
+| fmcg | 16,984 | 7.03 | 7.51 | 62.6% |
+| lifestyle | 5,497 | 7.11 | 7.77 | 62.3% |
+| banking | 36,363 | 7.48 | 8.21 | 61.0% |
+| retail | 5,027 | 7.36 | 7.69 | 59.7% |
+| logistics | 10,641 | 7.35 | 8.11 | 57.5% |
+| construction | 22,856 | 8.00 | 7.60 | 53.5% |
+| software | 5,214 | 8.39 | 8.16 | 51.8% |
+| education | 8,628 | 8.18 | 7.93 | 50.6% |
+| tourism | 1,410 | 8.18 | 6.76 | **46.5%** |
+
+**Two distinct AIO behaviors emerge:**
+
+- **Regulated / established markets** (healthcare, jewelry, fintech, banking)
+  see ~63–67% overlap. AIO mostly cites the same domains that already rank
+  organically. To get cited, you need to rank.
+- **Long-tail / exploratory markets** (tourism, education, software,
+  construction) see only ~47–54% overlap. AIO reaches well outside organic
+  top-10 to find sources. Operationally: ranking is necessary but **far from
+  sufficient** in these markets.
+
+In tourism, the average AIO cites 8.18 distinct domains while the organic
+top-10 holds 6.76 distinct domains, and only **46.5% of citations match** —
+AIO is actively pulling from a wider source pool than what's ranking.
+
+![F8 — AIO ↔ top-10 overlap by vertical](charts/f8_overlap_by_vertical.png)
+
+---
+
 ## Methodology notes
 
 - **Cleaning:** dropped ~5.3% of rows where the keyword references a SEONGON

@@ -122,6 +122,16 @@ CREATE TABLE atlas.f7_concentration_by_vertical (
     top10_share       numeric(5,2) NOT NULL
 );
 
+-- F8 — AIO vs organic top-10 overlap, per vertical
+CREATE TABLE atlas.f8_overlap_by_vertical (
+    vertical             text PRIMARY KEY,
+    rows_analyzed        integer NOT NULL,
+    avg_cited            numeric(10,4) NOT NULL,
+    avg_top10            numeric(10,4) NOT NULL,
+    avg_overlap          numeric(10,4) NOT NULL,
+    pct_cited_in_top10   numeric(6,4) NOT NULL
+);
+
 -- ─── Run metadata ────────────────────────────────────────────────────
 
 CREATE TABLE atlas.load_runs (

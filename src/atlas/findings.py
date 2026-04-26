@@ -384,6 +384,83 @@ def finding_7_concentration_by_vertical(min_rows: int = 1000) -> pl.DataFrame:
     return result
 
 
+def finding_8_overlap_by_vertical(min_rows: int = 1000) -> pl.DataFrame:
+    """Per-vertical version of F2 (AIO ↔ organic top-10 overlap).
+
+    F2 was a global 59.4%. Slicing by vertical reveals which markets play
+    'AIO = top-10' and which see AIO reach into the long tail. Verticals
+    that score low here = markets where ranking organically is *not enough*
+    to be cited.
+    """
+    refs = pl.read_parquet(RAW_DIR / "aio_refs_domains.parquet")
+    org = pl.read_parquet(RAW_DIR / "organic_top10.parquet")
+    meta = _load_meta()
+
+    big = (
+        meta.group_by("vertical").agg(pl.len().alias("rows")).filter(pl.col("rows") >= min_rows)
+    )["vertical"].to_list()
+    big = [v for v in big if v != "unknown"]
+
+    # Annotate with vertical, restrict to big verticals, restrict to cleaned ids
+    valid = meta.select("id", "vertical").filter(pl.col("vertical").is_in(big))
+    refs_v = refs.join(valid, on="id", how="inner")
+    org_v = org.join(valid, on="id", how="inner")
+
+    joined = refs_v.join(org_v.select("id", "top10_domains"), on="id", how="inner")
+    stats = joined.with_columns(
+        pl.col("cited_domains").list.len().alias("n_cited"),
+        pl.col("top10_domains").list.len().alias("n_top10"),
+        pl.col("cited_domains")
+        .list.set_intersection(pl.col("top10_domains"))
+        .list.len()
+        .alias("n_overlap"),
+    ).with_columns(
+        pl.when(pl.col("n_cited") > 0)
+        .then(pl.col("n_overlap") / pl.col("n_cited"))
+        .otherwise(0.0)
+        .alias("pct_cited_in_top10")
+    )
+
+    result = (
+        stats.group_by("vertical")
+        .agg(
+            pl.len().alias("rows_analyzed"),
+            pl.col("n_cited").mean().alias("avg_cited"),
+            pl.col("n_top10").mean().alias("avg_top10"),
+            pl.col("n_overlap").mean().alias("avg_overlap"),
+            pl.col("pct_cited_in_top10").mean().alias("pct_cited_in_top10"),
+        )
+        .sort("pct_cited_in_top10", descending=True)
+        .with_columns(
+            (pl.col("pct_cited_in_top10") * 100).round(1).alias("pct_cited_in_top10_display")
+        )
+    )
+
+    fig, ax = plt.subplots(figsize=(10, max(5, result.height * 0.45)))
+    verticals = result["vertical"].to_list()[::-1]
+    pcts = result["pct_cited_in_top10_display"].to_list()[::-1]
+    ns = result["rows_analyzed"].to_list()[::-1]
+    ax.barh(verticals, pcts, color=INDIGO, edgecolor="white")
+    for i, (p, n) in enumerate(zip(pcts, ns, strict=True)):
+        ax.text(p + 1, i, f"{p:.1f}%  (n={n:,})", va="center", fontsize=9)
+    ax.set_xlim(0, 100)
+    ax.set_xlabel("% of AIO citations also in organic top-10 (per query, averaged)")
+    ax.axvline(59.4, color="#475569", linestyle="--", linewidth=1)
+    ax.text(60, len(verticals) - 0.5, "global avg 59.4%", fontsize=8, color="#475569")
+    ax.set_title(
+        "AIO citations vs organic top-10 — by vertical\n"
+        "lower % = AIO reaches further outside top-10 in this vertical",
+        loc="left",
+        weight="bold",
+        fontsize=11,
+    )
+    out = CHARTS_DIR / "f8_overlap_by_vertical.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
 def finding_5_aio_rate_by_vertical(meta: pl.DataFrame) -> pl.DataFrame:
     """AIO appearance rate by vertical — reveals which verticals AIO dominates."""
     result = (
@@ -513,6 +590,24 @@ def run_all() -> None:
     for r in f5.iter_rows(named=True):
         t5.add_row(r["vertical"], f"{r['rows']:,}", f"{r['aio_rows']:,}", f"{r['aio_pct']}%")
     console.print(t5)
+
+    console.log("\n[bold]Finding 8 — AIO ↔ top-10 overlap by vertical[/]")
+    f8 = finding_8_overlap_by_vertical()
+    t8 = Table(title="F8: AIO citations also in organic top-10, per vertical")
+    t8.add_column("vertical")
+    t8.add_column("rows", justify="right")
+    t8.add_column("avg cited", justify="right")
+    t8.add_column("avg top-10", justify="right")
+    t8.add_column("% in top-10", justify="right")
+    for r in f8.iter_rows(named=True):
+        t8.add_row(
+            r["vertical"],
+            f"{r['rows_analyzed']:,}",
+            f"{r['avg_cited']:.2f}",
+            f"{r['avg_top10']:.2f}",
+            f"{r['pct_cited_in_top10_display']}%",
+        )
+    console.print(t8)
 
     console.log("\n[bold]Finding 7 — citation concentration by vertical[/]")
     f7 = finding_7_concentration_by_vertical()
