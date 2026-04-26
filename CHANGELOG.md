@@ -2,6 +2,22 @@
 
 All notable changes to the Vietnam AI Overview Atlas project. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.3] — 2026-04-27
+
+### Added
+
+- **F11 — Per-vertical replication of F9.** The "sitelinks +213% headline" universal holds across every vertical but ranges from +116% (lifestyle) to +286% (banking). The rating signal flips sign by vertical: helps in jewelry/software/banking, hurts in healthcare/tourism. Surfaces the practical insight that one-size-fits-all SEO playbooks miss per-vertical signal flips.
+- **F12 — Citation share-of-voice over time.** Monthly share-of-voice for top-5 domains in each vertical. Most verticals show stable hierarchies; banking saw a notable April-2026 compression in incumbent share that warrants investigation.
+- **`atlas.f11_features_by_vertical`** and **`atlas.f12_share_of_voice_monthly`** persisted findings tables.
+- **Heatmap component** for the dashboard — pure-CSS with diverging color scale (indigo for pro-cited signals, red for pro-uncited).
+- **Sparkline component** for the dashboard — minimal SVG sparklines for compact in-row trend visualization in F12.
+- **F11 and F12 sections** on the dashboard (server-rendered, vertical-filterable, EN/VI translated).
+- **Per-vertical filter on F12** narrows the share-of-voice view to a single market.
+
+### Fixed
+
+- **Misdirected `railway up`** during the F11 deploy. The earlier `cd dashboard && cd ..` reset the Railway link to the personal-blog project. Caught at the next deploy via build URL inspection. Personal-blog wasn't damaged (Railway keeps the previous deploy live on build failure), but worth noting: always verify `railway status` before each `railway up`.
+
 ## [v0.2] — 2026-04-27
 
 ### Added

@@ -36,7 +36,7 @@ All published numbers are aggregated to vertical or domain level. No raw client 
 
 ## Headline findings
 
-Ten findings on the cleaned 231,365-row corpus. Full breakdown in [FINDINGS.md](./FINDINGS.md); long-form analysis in [REPORT.md](./report/REPORT.md).
+Twelve findings on the cleaned 231,365-row corpus. Full breakdown in [FINDINGS.md](./FINDINGS.md); long-form analysis of F1–F10 in [REPORT.md](./report/REPORT.md). F11 and F12 are supplementary deep-dives in FINDINGS.md.
 
 1. **Long-tail queries trigger AIO 2.5× more than head terms.** 1–2 word queries: 32.8% AIO. 10+ word queries: 80.8%.
 2. **40% of AIO citations come from outside organic top 10.** Average AIO cites 7.4 distinct domains; ~4 rank in top 10.
@@ -48,6 +48,8 @@ Ten findings on the cleaned 231,365-row corpus. Full breakdown in [FINDINGS.md](
 8. **In long-tail verticals, ranking organically isn't enough.** Tourism: only 47% of AIO citations are in organic top-10. Healthcare: 67%.
 9. **Sitelinks are the largest single signal of AIO citation.** URLs with sitelinks cited 3.1× more often than URLs without.
 10. **Healthcare AIOs are 67% longer than jewelry AIOs.** Reflects E-E-A-T conservatism for YMYL queries.
+11. **Different verticals reward different signals.** Sitelinks signal universal but ranges +116% (lifestyle) to +286% (banking). Ratings sign-flip: +96% (jewelry) to −61% (tourism).
+12. **Citation hierarchies are mostly stable, with vertical-specific shifts.** Most verticals show stable top-5 share over the 5 months; banking saw a notable April compression in incumbent share.
 
 ![AIO presence by query length](charts/f1_query_length_vs_aio.png)
 
