@@ -1,0 +1,43 @@
+# Data — never commit. Even anonymized exports stay local until publication.
+data/
+*.parquet
+*.csv
+*.jsonl
+*.duckdb
+
+# Notebooks — checkpoint dirs only; commit notebooks themselves
+.ipynb_checkpoints/
+.virtual_documents/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Output artifacts (regenerable from notebooks)
+charts/
+exports/
