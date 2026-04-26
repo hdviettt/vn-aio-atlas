@@ -469,6 +469,85 @@ def finding_9_cited_vs_uncited_features() -> pl.DataFrame | None:
     return result
 
 
+def finding_10_aio_characteristics_by_vertical() -> pl.DataFrame | None:
+    """AIO answer length and reference count, sliced by vertical.
+
+    Reads from atlas.f10 (computed by load.py). Two-panel chart:
+    avg AIO length per vertical + avg references per AIO per vertical.
+    """
+    from atlas.db import atlas_conn
+
+    try:
+        with atlas_conn() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT vertical, aio_rows, avg_md_chars, p50_md_chars,
+                       p90_md_chars, avg_refs_per_aio
+                  FROM atlas.f10_aio_characteristics_by_vertical
+                 ORDER BY avg_md_chars DESC
+                """
+            )
+            rows = cur.fetchall()
+    except Exception as e:
+        console.log(f"  F10 skipped: {e}")
+        return None
+
+    if not rows:
+        return None
+
+    result = pl.DataFrame(
+        rows,
+        schema={
+            "vertical": pl.String,
+            "aio_rows": pl.Int64,
+            "avg_md_chars": pl.Int64,
+            "p50_md_chars": pl.Int64,
+            "p90_md_chars": pl.Int64,
+            "avg_refs_per_aio": pl.Float64,
+        },
+        orient="row",
+    )
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, max(5, result.height * 0.45)))
+    verticals = result["vertical"].to_list()[::-1]
+
+    chars = result["avg_md_chars"].to_list()[::-1]
+    ax1.barh(verticals, chars, color=INDIGO, edgecolor="white")
+    for i, v in enumerate(chars):
+        ax1.text(v + max(chars) * 0.01, i, f"{v:,}", va="center", fontsize=9)
+    ax1.set_xlabel("avg AIO length (chars)")
+    ax1.set_title(
+        "AIO answer length by vertical",
+        loc="left",
+        weight="bold",
+        fontsize=11,
+    )
+
+    refs = result["avg_refs_per_aio"].to_list()[::-1]
+    ax2.barh(verticals, refs, color=INDIGO, edgecolor="white")
+    for i, v in enumerate(refs):
+        ax2.text(v + max(refs) * 0.01, i, f"{v:.1f}", va="center", fontsize=9)
+    ax2.set_xlabel("avg references per AIO")
+    ax2.set_title(
+        "AIO citation depth by vertical",
+        loc="left",
+        weight="bold",
+        fontsize=11,
+    )
+
+    fig.suptitle(
+        "F10 — AIO answer characteristics by vertical",
+        weight="bold",
+        fontsize=13,
+    )
+    fig.tight_layout()
+    out = CHARTS_DIR / "f10_aio_characteristics_by_vertical.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
 def finding_8_overlap_by_vertical(min_rows: int = 1000) -> pl.DataFrame:
     """Per-vertical version of F2 (AIO ↔ organic top-10 overlap).
 
@@ -675,6 +754,23 @@ def run_all() -> None:
     for r in f5.iter_rows(named=True):
         t5.add_row(r["vertical"], f"{r['rows']:,}", f"{r['aio_rows']:,}", f"{r['aio_pct']}%")
     console.print(t5)
+
+    console.log("\n[bold]Finding 10 — AIO characteristics by vertical[/]")
+    f10 = finding_10_aio_characteristics_by_vertical()
+    if f10 is not None:
+        t10 = Table(title="F10: AIO length and reference count by vertical")
+        t10.add_column("vertical")
+        t10.add_column("aio rows", justify="right")
+        t10.add_column("avg chars", justify="right")
+        t10.add_column("avg refs", justify="right")
+        for r in f10.iter_rows(named=True):
+            t10.add_row(
+                r["vertical"],
+                f"{r['aio_rows']:,}",
+                f"{r['avg_md_chars']:,}",
+                f"{r['avg_refs_per_aio']:.2f}",
+            )
+        console.print(t10)
 
     console.log("\n[bold]Finding 9 — cited vs uncited URL features[/]")
     f9 = finding_9_cited_vs_uncited_features()

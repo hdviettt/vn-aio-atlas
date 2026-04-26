@@ -304,6 +304,8 @@ are in jewelry.
 
 This finding extends F2's "AIO cites 7.4 domains average" — that average masks substantial vertical variance from 7.1 (jewelry) to 10.1 (healthcare). Operators can use this as an expected-density baseline: if your healthcare content competes for 10-source AIO answers but reads like a jewelry-style 7-source brief, you're under-supplying the reference depth Google looks for.
 
+![F10 — AIO characteristics by vertical](charts/f10_aio_characteristics_by_vertical.png)
+
 ---
 
 ## Methodology notes
