@@ -33,12 +33,17 @@ All public publications will use anonymized aggregations only. No client-identif
 
 ## Headline findings (preview)
 
-These hold across the full dataset and will be developed in detail in the published report:
+Six findings have been validated on the cleaned 231K-row corpus. Full
+breakdown with charts and methodology in **[FINDINGS.md](./FINDINGS.md)**.
 
-1. **Long-tail queries trigger AI Overviews 2.4× more than head terms.** 1–2 word queries: 32% AIO. 7+ word queries: 76% AIO.
-2. **40% of AIO citations come from outside organic top 10.** Average AIO cites 9 domains; ~4 of them rank in the top 10. The rest sit at lower ranks or aren't ranked for that query at all.
-3. **Banking and healthcare dominate AIO citations.** Top-cited domains are concentrated in financial services (Techcombank, VIB, VPBank, HDBank) and clinical/pharma sources (Long Châu Pharmacy, Vinmec, Medlatec, Tâm Anh).
-4. **UGC platforms get cited at lower per-appearance rates than info-vertical domains.** Facebook and YouTube show up in many SERPs but get cited proportionally less often than health and banking domains. There appears to be a measurable AIO devaluation of UGC content.
+1. **Long-tail queries trigger AI Overviews 2.5× more than head terms.** 1–2 word queries: 32.8% AIO. 10+ word queries: 80.8%.
+2. **40% of AIO citations come from outside organic top 10.** Average AIO cites 7.4 domains; ~4 rank in the top 10. The rest sit at lower ranks or aren't ranked at all.
+3. **Banks own their queries deeply, UGC platforms get cited thinly.** New finding. Techcombank shows citation density of 4.71 (cited multiple times per query); Facebook 1.87 and YouTube 1.65 (one citation per query, spread thin).
+4. **AIO length is stable over the 5-month window.** Null result, worth reporting.
+5. **AIO presence varies dramatically by vertical.** Education 83%, healthcare 81%, banking 77% — but retail only 34% and construction 48%. ~50pp spread between most- and least-AIO-saturated verticals.
+6. **Each vertical has its own citation hierarchy.** Banking dominated by TCB/Timo/VPBank, healthcare by Long Châu/Vinmec/Medlatec, logistics by GHN/Viettel Post/GHTK, etc. Per-vertical winner maps for 13 verticals.
+
+![AIO presence by query length](charts/f1_query_length_vs_aio.png)
 
 ## What this is not
 

@@ -38,6 +38,6 @@ Thumbs.db
 .idea/
 *.swp
 
-# Output artifacts (regenerable from notebooks)
-charts/
+# Charts ARE the deliverable for this project — commit them.
+# (PNGs only; intermediate vector / svg exports stay local)
 exports/
