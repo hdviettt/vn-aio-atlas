@@ -96,6 +96,16 @@ export type F9Row = {
   n_uncited: number;
 };
 
+export async function getVerticals(): Promise<string[]> {
+  const rows = await query<{ vertical: string }>(
+    `SELECT vertical
+       FROM atlas.f5_aio_rate_by_vertical
+      WHERE vertical <> 'unknown'
+      ORDER BY rows DESC`,
+  );
+  return rows.map((r) => r.vertical);
+}
+
 export async function getCorpusSummary() {
   const rows = await query<{
     total_rows: number;
@@ -121,27 +131,101 @@ export async function getCorpusSummary() {
   return rows[0];
 }
 
-export const f1 = () =>
-  query<F1Row>(
+export const f1 = (vertical?: string) => {
+  if (vertical) {
+    return query<F1Row>(
+      `WITH bucketed AS (
+         SELECT
+           CASE
+             WHEN keyword_token_count <= 2 THEN '1-2'
+             WHEN keyword_token_count <= 4 THEN '3-4'
+             WHEN keyword_token_count <= 6 THEN '5-6'
+             WHEN keyword_token_count <= 9 THEN '7-9'
+             ELSE '10+'
+           END AS bucket,
+           CASE
+             WHEN keyword_token_count <= 2 THEN 1
+             WHEN keyword_token_count <= 4 THEN 2
+             WHEN keyword_token_count <= 6 THEN 3
+             WHEN keyword_token_count <= 9 THEN 4
+             ELSE 5
+           END AS sort_key,
+           has_ai_overview
+         FROM atlas.keyword_results
+         WHERE vertical = $1
+       )
+       SELECT bucket,
+              COUNT(*)::int                                      AS rows,
+              COUNT(*) FILTER (WHERE has_ai_overview)::int       AS aio_rows,
+              ROUND(100.0 * COUNT(*) FILTER (WHERE has_ai_overview) / NULLIF(COUNT(*),0), 2) AS aio_pct,
+              MIN(sort_key)::int                                 AS sort_key
+         FROM bucketed
+       GROUP BY 1
+       ORDER BY MIN(sort_key)`,
+      [vertical],
+    );
+  }
+  return query<F1Row>(
     `SELECT bucket, rows, aio_rows, aio_pct, sort_key
        FROM atlas.f1_query_length_aio ORDER BY sort_key`,
   );
+};
 
 export const f2 = () => query<F2Row>(`SELECT metric, value FROM atlas.f2_top10_overlap`);
 
-export const f3 = (limit = 25) =>
-  query<F3Row>(
+export const f3 = (vertical?: string, limit = 25) => {
+  if (vertical) {
+    // Per-vertical top cited — uses F6 plus a density join from raw counts.
+    return query<F3Row>(
+      `WITH per_v AS (
+         SELECT a.domain,
+                COUNT(*) AS citations,
+                COUNT(DISTINCT k.keyword) AS distinct_keywords
+           FROM atlas.aio_citations a
+           JOIN atlas.keyword_results k ON k.id = a.keyword_result_id
+          WHERE k.vertical = $1
+          GROUP BY a.domain
+       )
+       SELECT domain,
+              citations::int,
+              distinct_keywords::int,
+              ROUND((citations::numeric / NULLIF(distinct_keywords,0)), 3) AS citation_density,
+              RANK() OVER (ORDER BY citations DESC)::int AS rank_overall
+         FROM per_v
+       ORDER BY citations DESC
+       LIMIT $2`,
+      [vertical, limit],
+    );
+  }
+  return query<F3Row>(
     `SELECT domain, citations, distinct_keywords, citation_density, rank_overall
        FROM atlas.f3_top_cited_domains
       ORDER BY rank_overall LIMIT $1`,
     [limit],
   );
+};
 
-export const f4 = () =>
-  query<F4Row>(
+export const f4 = (vertical?: string) => {
+  if (vertical) {
+    return query<F4Row>(
+      `SELECT date_trunc('week', created_at)::date::text AS week,
+              COUNT(*)::int                              AS rows,
+              ROUND(AVG(aio_md_len))::int                AS avg_chars,
+              PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY aio_md_len)::int AS p50_chars,
+              PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY aio_md_len)::int AS p90_chars
+         FROM atlas.keyword_results
+        WHERE has_ai_overview AND aio_md_len > 0
+          AND vertical = $1
+        GROUP BY 1
+        ORDER BY 1`,
+      [vertical],
+    );
+  }
+  return query<F4Row>(
     `SELECT week::text, rows, avg_chars, p50_chars, p90_chars
        FROM atlas.f4_aio_length_weekly ORDER BY week`,
   );
+};
 
 export const f5 = () =>
   query<F5Row>(

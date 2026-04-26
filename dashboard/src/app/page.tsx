@@ -9,16 +9,18 @@ import {
   f8,
   f9,
   getCorpusSummary,
+  getVerticals,
 } from "@/lib/db";
+import { isLang, type Lang, tx } from "@/lib/i18n";
 import { BarChartH } from "@/components/charts/BarChartH";
 import { BarChartV } from "@/components/charts/BarChartV";
 import { LineChart } from "@/components/charts/LineChart";
+import { StickyHeader } from "@/components/StickyHeader";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const fmtNum = (n: number) => Number(n).toLocaleString();
-const fmtPct = (n: number) => `${Number(n).toFixed(1)}%`;
 
 function Section({
   id,
@@ -63,7 +65,21 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   );
 }
 
-export default async function Home() {
+type SP = { vertical?: string | string[]; lang?: string | string[] };
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}) {
+  const sp = await searchParams;
+  const verticalRaw = Array.isArray(sp.vertical) ? sp.vertical[0] : sp.vertical;
+  const langRaw = Array.isArray(sp.lang) ? sp.lang[0] : sp.lang;
+  const lang: Lang = isLang(langRaw) ? langRaw : "en";
+
+  const [verticals] = await Promise.all([getVerticals()]);
+  const vertical = verticalRaw && verticals.includes(verticalRaw) ? verticalRaw : undefined;
+
   const [
     summary,
     f1Data,
@@ -77,10 +93,10 @@ export default async function Home() {
     f9Data,
   ] = await Promise.all([
     getCorpusSummary(),
-    f1(),
+    f1(vertical),
     f2(),
-    f3(),
-    f4(),
+    f3(vertical),
+    f4(vertical),
     f5(),
     f6(),
     f7(),
@@ -92,67 +108,85 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-white text-slate-900 antialiased">
-      <div className="mx-auto max-w-5xl px-6 py-16">
+      <div className="mx-auto max-w-5xl px-6 pt-4 pb-16">
+        <StickyHeader
+          verticals={verticals}
+          vertical={vertical}
+          lang={lang}
+          labels={{ all: tx(lang, "filter_all"), viewing: tx(lang, "filter_viewing") }}
+        />
+
         {/* Hero */}
         <header className="mb-16">
           <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-600 mb-3">
-            atlas · preliminary findings
+            {tx(lang, "header_eyebrow")}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-5">
-            Vietnam AI Overview Atlas
+            {tx(lang, "header_title")}
           </h1>
           <p className="text-lg text-slate-600 leading-relaxed max-w-2xl">
-            An empirical study of how Google&apos;s AI Overviews behave on
-            Vietnamese commercial search, backed by{" "}
+            {tx(lang, "header_lede")}{" "}
             <strong className="text-slate-900">
               {fmtNum(summary.total_rows)}
             </strong>{" "}
-            query observations and{" "}
+            {tx(lang, "header_lede_q")}{" "}
             <strong className="text-slate-900">
               {fmtNum(summary.total_citations)}
             </strong>{" "}
-            citation events from December 2025 through April 2026.
+            {tx(lang, "header_lede_c")}
           </p>
 
+          {vertical && (
+            <div className="mt-6 inline-flex items-center gap-2 text-sm bg-indigo-50 border border-indigo-200 px-3 py-2">
+              <span className="text-indigo-900">
+                {tx(lang, "vertical_banner_prefix")}{" "}
+                <strong>{vertical}</strong>
+              </span>
+              <a
+                href={lang === "en" ? "/" : "/?lang=vi"}
+                className="text-indigo-600 hover:underline ml-2"
+              >
+                {tx(lang, "vertical_banner_clear")}
+              </a>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 mt-12">
-            <Stat label="rows" value={fmtNum(summary.total_rows)} />
+            <Stat label={tx(lang, "stat_rows")} value={fmtNum(summary.total_rows)} />
             <Stat
-              label="aio-positive"
+              label={tx(lang, "stat_aio_positive")}
               value={fmtNum(summary.aio_rows)}
-              sub={`${((summary.aio_rows / summary.total_rows) * 100).toFixed(0)}% of total`}
+              sub={`${((summary.aio_rows / summary.total_rows) * 100).toFixed(0)}% ${tx(lang, "stat_aio_subtotal")}`}
             />
             <Stat
-              label="distinct queries"
+              label={tx(lang, "stat_distinct_queries")}
               value={fmtNum(summary.distinct_keywords)}
             />
-            <Stat label="brand projects" value={fmtNum(summary.distinct_projects)} />
-            <Stat label="verticals" value={String(summary.distinct_verticals)} />
+            <Stat label={tx(lang, "stat_brand_projects")} value={fmtNum(summary.distinct_projects)} />
+            <Stat label={tx(lang, "stat_verticals")} value={String(summary.distinct_verticals)} />
             <Stat
-              label="citations"
+              label={tx(lang, "stat_citations")}
               value={fmtNum(summary.total_citations)}
-              sub="across all AIO answers"
+              sub={tx(lang, "stat_citations_sub")}
             />
-            <Stat
-              label="from"
-              value={summary.earliest?.slice(0, 10) ?? "—"}
-            />
-            <Stat label="to" value={summary.latest?.slice(0, 10) ?? "—"} />
+            <Stat label={tx(lang, "stat_from")} value={summary.earliest?.slice(0, 10) ?? "—"} />
+            <Stat label={tx(lang, "stat_to")} value={summary.latest?.slice(0, 10) ?? "—"} />
           </div>
         </header>
 
         {/* F1 */}
         <Section
           id="f1"
-          eyebrow="finding 1"
-          title="AI Overviews appear 2.5× more often on long-tail queries than head terms"
-          takeaway="Queries of 10+ words get an AI Overview 80.8% of the time; 1–2 word queries only 32.8%. The relationship is monotonic across all five buckets — long-tail queries are the AIO-rich tail of Vietnamese commercial search."
+          eyebrow={tx(lang, "f1_eyebrow")}
+          title={tx(lang, "f1_title")}
+          takeaway={tx(lang, "f1_takeaway")}
         >
           <BarChartV
             data={f1Data.map((r) => ({
               label: r.bucket,
               value: Number(r.aio_pct),
             }))}
-            yLabel="AIO presence rate (%)"
+            yLabel={tx(lang, "f1_y_label")}
             format="pct"
           />
         </Section>
@@ -160,25 +194,25 @@ export default async function Home() {
         {/* F2 */}
         <Section
           id="f2"
-          eyebrow="finding 2"
-          title="40% of AI Overview citations come from outside the organic top 10"
-          takeaway="Across 153K AIO-positive SERPs, an average AIO cites 7.4 distinct domains; only 4.3 of those rank in the organic top 10. The remaining 40% come from lower ranks or aren't ranked organically for that query at all."
+          eyebrow={tx(lang, "f2_eyebrow")}
+          title={tx(lang, "f2_title")}
+          takeaway={tx(lang, "f2_takeaway")}
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <Stat
-              label="rows analyzed"
+              label={tx(lang, "f2_rows_analyzed")}
               value={fmtNum(f2Map.get("rows_analyzed") ?? 0)}
             />
             <Stat
-              label="avg cited / query"
+              label={tx(lang, "f2_avg_cited")}
               value={(f2Map.get("avg_cited") ?? 0).toFixed(2)}
             />
             <Stat
-              label="avg overlap"
+              label={tx(lang, "f2_avg_overlap")}
               value={(f2Map.get("avg_overlap") ?? 0).toFixed(2)}
             />
             <Stat
-              label="% in top-10"
+              label={tx(lang, "f2_pct_top10")}
               value={`${((f2Map.get("pct_cited_in_top10") ?? 0) * 100).toFixed(1)}%`}
             />
           </div>
@@ -187,9 +221,9 @@ export default async function Home() {
         {/* F3 */}
         <Section
           id="f3"
-          eyebrow="finding 3"
-          title="Banks own their queries deeply. UGC platforms get cited thinly."
-          takeaway="Citation density (citations / distinct keywords) splits cleanly: Vietnamese banks like Techcombank (4.71) and MB (4.39) are cited multiple times within the same AI Overview answer. Facebook (1.87) and YouTube (1.65) appear in many SERPs but rarely cited deeply — a measurable AIO devaluation of UGC content."
+          eyebrow={tx(lang, "f3_eyebrow")}
+          title={tx(lang, "f3_title")}
+          takeaway={tx(lang, "f3_takeaway")}
         >
           <BarChartH
             data={f3Data.slice(0, 20).map((r) => ({
@@ -197,7 +231,7 @@ export default async function Home() {
               value: Number(r.citations),
               sub: `density ${Number(r.citation_density).toFixed(2)}`,
             }))}
-            xLabel="AIO citations"
+            xLabel={tx(lang, "f3_x_label")}
             height={520}
             format="num"
           />
@@ -206,9 +240,9 @@ export default async function Home() {
         {/* F4 */}
         <Section
           id="f4"
-          eyebrow="finding 4"
-          title="AI Overview length is roughly stable over five months"
-          takeaway="Weekly average AIO length drifted from ~4,300 chars to ~4,200 chars (−2.8%) over December 2025 → April 2026. Real but small. Reported as a null finding."
+          eyebrow={tx(lang, "f4_eyebrow")}
+          title={tx(lang, "f4_title")}
+          takeaway={tx(lang, "f4_takeaway")}
         >
           <LineChart
             data={f4Data.map((r) => ({
@@ -223,16 +257,16 @@ export default async function Home() {
         {/* F5 */}
         <Section
           id="f5"
-          eyebrow="finding 5"
-          title="AIO presence varies dramatically by client vertical"
-          takeaway="Education (83%), healthcare (81%), and banking (77%) trigger AI Overviews far more than retail (34%) or construction (48%). Information-heavy verticals are AIO-saturated; commercial / transactional verticals are not."
+          eyebrow={tx(lang, "f5_eyebrow")}
+          title={tx(lang, "f5_title")}
+          takeaway={tx(lang, "f5_takeaway")}
         >
           <BarChartH
             data={f5Data.slice(0, 13).map((r) => ({
               label: r.vertical,
               value: Number(r.aio_pct),
             }))}
-            xLabel="AIO presence (%)"
+            xLabel={tx(lang, "f5_x_label")}
             height={420}
             format="pct"
           />
@@ -241,21 +275,22 @@ export default async function Home() {
         {/* F6 */}
         <Section
           id="f6"
-          eyebrow="finding 6"
-          title="Each vertical has its own AIO citation hierarchy"
-          takeaway="The top cited domains within each vertical reveal who owns AIO citations in their market. Banks dominate banking; Long Châu / Vinmec / Medlatec dominate healthcare; GHN / Viettel Post / GHTK own logistics."
+          eyebrow={tx(lang, "f6_eyebrow")}
+          title={tx(lang, "f6_title")}
+          takeaway={tx(lang, "f6_takeaway")}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
             {Array.from(new Set(f6Data.map((r) => r.vertical)))
               .sort()
-              .map((vertical) => {
+              .filter((v) => !vertical || v === vertical)
+              .map((v) => {
                 const rows = f6Data
-                  .filter((r) => r.vertical === vertical)
+                  .filter((r) => r.vertical === v)
                   .slice(0, 5);
                 return (
-                  <div key={vertical}>
+                  <div key={v}>
                     <div className="text-[11px] font-bold uppercase tracking-widest text-indigo-600 mb-2">
-                      {vertical}
+                      {v}
                     </div>
                     <div className="space-y-1">
                       {rows.map((r) => (
@@ -281,9 +316,9 @@ export default async function Home() {
         {/* F7 */}
         <Section
           id="f7"
-          eyebrow="finding 7"
-          title="Citation concentration varies dramatically by vertical"
-          takeaway="In jewelry and healthcare, the top 10 domains capture ~46–49% of all AIO citations — concentrated markets. In construction and software, the top 10 only capture 13–15% — long-tail markets. The same SEO playbook can&apos;t work in both."
+          eyebrow={tx(lang, "f7_eyebrow")}
+          title={tx(lang, "f7_title")}
+          takeaway={tx(lang, "f7_takeaway")}
         >
           <BarChartH
             data={f7Data.map((r) => ({
@@ -291,7 +326,7 @@ export default async function Home() {
               value: Number(r.top10_share),
               sub: `top-1: ${r.top1_domain ?? "—"}`,
             }))}
-            xLabel="% of citations going to top 10 domains"
+            xLabel={tx(lang, "f7_x_label")}
             height={420}
             format="pct"
           />
@@ -300,16 +335,16 @@ export default async function Home() {
         {/* F8 */}
         <Section
           id="f8"
-          eyebrow="finding 8"
-          title="In long-tail verticals, ranking organically isn&apos;t enough"
-          takeaway="The global F2 number (59% AIO ↔ top-10 overlap) hides a clean split. Healthcare (67%), banking (61%): AIO mostly cites organic top-10. Tourism (47%), education (51%): AIO reaches well outside top-10 to find sources."
+          eyebrow={tx(lang, "f8_eyebrow")}
+          title={tx(lang, "f8_title")}
+          takeaway={tx(lang, "f8_takeaway")}
         >
           <BarChartH
             data={f8Data.map((r) => ({
               label: r.vertical,
               value: Number(r.pct_cited_in_top10) * 100,
             }))}
-            xLabel="% of AIO citations also in organic top-10"
+            xLabel={tx(lang, "f8_x_label")}
             height={420}
             format="pct"
           />
@@ -318,9 +353,9 @@ export default async function Home() {
         {/* F9 */}
         <Section
           id="f9"
-          eyebrow="finding 9"
-          title="Sitelinks are the single largest signal of AIO citation"
-          takeaway="URLs with sitelinks are cited 3.1× more often than URLs without (13.2% vs 4.2%). Cited URLs rank ~5 positions higher on average (rank 8.5 vs 13.5). Title and description length differences are tiny (~3%) and not the lever to pull."
+          eyebrow={tx(lang, "f9_eyebrow")}
+          title={tx(lang, "f9_title")}
+          takeaway={tx(lang, "f9_takeaway")}
         >
           <div className="space-y-2">
             {f9Data.map((r) => {
@@ -338,7 +373,7 @@ export default async function Home() {
                   <div className="w-48 sm:w-72 flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <div className="text-[10px] uppercase font-semibold text-slate-500 w-16">
-                        cited
+                        {tx(lang, "f9_label_cited")}
                       </div>
                       <div className="flex-1 h-2.5 bg-slate-100 rounded-sm overflow-hidden">
                         <div
@@ -349,7 +384,7 @@ export default async function Home() {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-[10px] uppercase font-semibold text-slate-400 w-16">
-                        uncited
+                        {tx(lang, "f9_label_uncited")}
                       </div>
                       <div className="flex-1 h-2.5 bg-slate-100 rounded-sm overflow-hidden">
                         <div
@@ -375,42 +410,37 @@ export default async function Home() {
               );
             })}
           </div>
-          <p className="text-xs text-slate-500 mt-4">
-            Sample: 10,000 random AIO-positive SERPs → 179,201 organic URLs
-            (45,878 cited, 133,323 uncited). <code>has_price</code> excluded
-            due to a known SQL extraction bug; fix landed in pull.py for the
-            next refresh.
-          </p>
+          <p className="text-xs text-slate-500 mt-4">{tx(lang, "f9_caption")}</p>
         </Section>
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-slate-200 text-sm text-slate-500">
           <p className="mb-2">
-            Workspace led by{" "}
+            {tx(lang, "footer_intro")}{" "}
             <a
               href="https://hoangducviet.work"
               className="text-indigo-600 hover:underline"
             >
               Hoang Duc Viet
             </a>{" "}
-            (AI lead at{" "}
+            {tx(lang, "footer_role")}{" "}
             <a
               href="https://seongon.com"
               className="text-indigo-600 hover:underline"
             >
               SEONGON
             </a>
-            ). Dataset is SEONGON&apos;s; methodology and analysis are mine.
+            {tx(lang, "footer_after_role")}
           </p>
           <p>
-            Code:{" "}
+            {tx(lang, "footer_code")}{" "}
             <a
               href="https://github.com/hdviettt/vn-aio-atlas"
               className="text-indigo-600 hover:underline"
             >
               github.com/hdviettt/vn-aio-atlas
             </a>{" "}
-            · Findings doc:{" "}
+            · {tx(lang, "footer_findings")}{" "}
             <a
               href="https://github.com/hdviettt/vn-aio-atlas/blob/main/FINDINGS.md"
               className="text-indigo-600 hover:underline"
