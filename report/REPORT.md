@@ -214,15 +214,208 @@ For operators trying to optimize for AIO citation, these are the moves with the 
 
 ## Section 5 — Implications by Vertical
 
-*(To be written. The dashboard already shows per-vertical citation hierarchies (F6) and concentration patterns (F7); this section will translate those into operational guidance for each major vertical: banking, healthcare, retail, fintech, FMCG, construction, logistics, education, software, lifestyle, tourism, jewelry.)*
+The aggregate findings (Sections 1–4) hold across the corpus, but their operational implications differ sharply between markets. A bank entering the AIO citation race faces a different problem than a construction-materials brand or an education provider — different concentration, different overlap with organic ranking, different pool of competing sources.
 
-Preliminary outline of the per-vertical sections:
+This section translates the per-vertical data (F5, F6, F7, F8) into actionable guidance. For each major vertical, it answers:
 
-- **Banking & Fintech.** AIO ↔ top-10 overlap is high (61%). Citation concentration is moderately concentrated (top-10 owns 31–40%). The market is competitive but stable; the playbook is "rank well + earn sitelinks + structured-data your product/rate pages." Defensive play is realistic.
-- **Healthcare & Pharma.** AIO ↔ top-10 overlap is highest (67%). Citation concentration is high (top-10 owns ~46%). Long Châu, Vinmec, and Medlatec dominate; new entrants face real friction. The AIO-citation play is ranking well + medical content credibility (provider attribution, structured medical schema, citation footnotes).
-- **Construction & Building Materials.** AIO ↔ top-10 overlap is among the lowest (54%). Top-10 concentration is the lowest in the dataset (12.8%). The market is fragmented; AIO is pulling from a long tail. New entrants have a real shot if they target structurally-rich content even without dominant ranking.
-- **Education.** AIO ↔ top-10 overlap is 51%. Universities (Hoa Sen, HUTECH, FPT University, UEL, VinUni) own AIO citations. A new entrant in the education vertical without recognized institutional status faces the steepest climb.
-- **Tourism.** AIO ↔ top-10 overlap is the lowest (47%). The vertical pulls from blogs, official tourism sites, and global content. The play is content depth + structural authority (long-form itineraries, photo-rich destination pages, structured trip data).
+- *How AIO-pervasive is this market?* (F5)
+- *Who already owns AIO citation share, and how concentrated is it?* (F6, F7)
+- *Does ranking organically translate to citation, or does AIO reach further?* (F8)
+- *What is the strategic posture (defend share / earn share / restructure for share) appropriate for a brand in this vertical?*
+- *What tactical moves should an SEO operator in this vertical prioritize?*
+
+Verticals are ordered by the size of their data footprint in the cleaned corpus, not by importance.
+
+### 5.1 — Banking (47,405 rows, 77% AIO rate)
+
+**Market structure.** Banking is the second-largest vertical in the corpus and one of the most AIO-saturated (77%). Citation concentration is moderate-to-high: the top 10 cited domains capture 40.5% of all AIO citations within the vertical. The top-10 organic overlap is 61% — meaning 39% of AIO citations come from outside the organic top 10.
+
+**Who already owns it.** Techcombank dominates (23,285 citations across 5,513 distinct queries, citation density 4.2). The next tier — Timo (13,343), VPBank (12,502), HDBank (10,468), Cake (9,477) — collectively occupies most of the remaining citation share. ACB, MB, SeABank, BIDV, and Prudential round out the top 10. Together, this is a near-complete picture of Vietnam's tier-1 retail banks plus the leading neobank challengers.
+
+**Strategic posture.** Defensive for incumbents; expensive but achievable for challengers. The market behaves like a stable oligopoly: a small number of well-capitalized brands occupy most of the citation share, and AIO largely confirms organic rankings (61% overlap). New entrants need to compete on multiple axes simultaneously — paid search, organic, content marketing, sitelink-earning site structure — to break into the top 10.
+
+**Tactical priorities for SEO operators in banking.**
+
+1. **Sitelinks are critical.** Per F9, sitelinks are the strongest single feature signal of AIO citation. Banking sites with deep navigational hierarchy (rate calculators, product pages, branch locators, FAQs) are precisely the kind of sites Google awards sitelinks to. Investing in clear category structure pays compound dividends.
+2. **Structured data on product pages.** Bank product pages (savings accounts, loans, cards) are textbook structured-data targets. `Product`, `FinancialProduct`, `OfferAggregate` schemas signal to Google that the page is an authoritative product reference.
+3. **Long-tail informational content.** AIO presence rises sharply with query length (F1). Banking has rich long-tail intent ("lãi suất tiết kiệm Techcombank kỳ hạn 6 tháng", "thẻ tín dụng cho người mới đi làm"). Long-form authoritative content for these queries gets cited; short generic product pages do not.
+4. **Authoritative sourcing for editorial content.** When AIO synthesizes a banking answer, it weaves citations from multiple sources. Pages that cite primary sources (State Bank of Vietnam regulations, original financial data) and are themselves cited by other domains tend to compound their citation rate over time.
+
+### 5.2 — Construction & Building Materials (48,455 rows, 48% AIO rate)
+
+**Market structure.** Construction is the largest vertical in the corpus by rows but among the *least* AIO-saturated (47.7%) — partly because construction queries skew commercial ("báo giá thang máy") rather than informational. More striking: construction has the **lowest citation concentration in the dataset** (top-10 = 12.8% of citations) across **7,762 distinct cited domains**. AIO ↔ top-10 overlap is 53.5% — second-lowest after software and education.
+
+**Who already owns it.** Lift companies dominate the SEONGON-tracked subset: Kalealifts (4,157), Cibeslift (3,972), Osakar (2,519), and Thang Máy Gia Đình (2,227). YouTube enters the top 5 (2,123) — unusual for a top-vertical position. Beyond the top 5, citations spread across thousands of small construction-materials suppliers, contractors, and review sites.
+
+**Strategic posture.** Greenfield. The construction market is structurally fragmented; no single brand dominates AIO citation share. For a new or mid-market brand, this is the most accessible vertical to enter via AIO — but also the most operationally demanding, because winning means showing up across hundreds of long-tail queries rather than dominating a small set.
+
+**Tactical priorities for SEO operators in construction.**
+
+1. **Topical depth across categories.** A site covering ten construction-material categories with deep content per category will out-perform a site covering all categories shallowly. The fragmentation means the citation reward for breadth + depth is higher than in concentrated markets.
+2. **Long-form content with structured comparison tables.** AIO loves source pages that present structured information (rated comparisons, spec tables, price ranges). Construction queries are often comparison-driven; a page that organizes the comparison cleanly is structurally easier to cite.
+3. **Local SEO + Google Business Profile.** For physical products with regional installation requirements (lifts, windows, doors), Google's Business Profile signals feed into AIO indirectly. Verified GBP listings with rich attributes correlate with citation in the broader regional commerce queries.
+4. **Don't expect to break into a top-10 list quickly.** Concentration is so low (12.8%) that "top-10 cited domain" is not a realistic medium-term target. The right metric is *citation rate per query in your sub-niche*, not absolute citation count.
+
+### 5.3 — FMCG & Consumer Goods (28,461 rows, 60% AIO rate)
+
+**Market structure.** Mid-saturation AIO presence (60%). Citation concentration is moderate (top-10 = 31.6% of citations). AIO ↔ top-10 overlap is 62.6%. The vertical sits between the highly-concentrated regulated markets (banking, healthcare) and the long-tail markets (construction, software).
+
+**Who already owns it.** A surprising mix:
+
+- **Avakids** (8,006) and **Bach Hoa Xanh** (6,478) — multi-category retailers covering FMCG categories.
+- **Long Châu** (7,146) and **Pharmacity** — pharmacies, despite this being the FMCG vertical. The boundary between "FMCG" and "pharma" blurs in queries about supplements, baby formula, hygiene products.
+- **Điện Máy Xanh** (2,961) — appliance retailer that handles FMCG-adjacent home goods.
+- **Vinamilk** (2,520) — the only single-brand FMCG manufacturer in the top 5.
+
+**Strategic posture.** Hybrid. FMCG manufacturers face structural headwinds: most of their AIO citations go to retail aggregators (Avakids, Bach Hoa Xanh) and pharmacy chains (Long Châu, Pharmacity), not to the brand's own .com.vn domain. Vinamilk is the exception that proves the rule — it occupies citation share through brand strength built over decades.
+
+**Tactical priorities for SEO operators in FMCG.**
+
+1. **Brand-domain content for branded queries.** Brand-name queries ("sữa Vinamilk", "khẩu trang 3M") are the queries where a manufacturer's .com.vn realistically wins citation share over retailers. Build deep brand-specific content (product info, manufacturer FAQs, certification details).
+2. **Co-citation through retailers.** For non-branded category queries ("sữa bột cho trẻ sơ sinh"), the realistic play is partnering with the Avakids / Long Châu / Bach Hoa Xanh ecosystem so your products are well-described on their pages — the pages that AIO actually cites.
+3. **Recipe / use-case content for niche FMCG.** AIO frequently cites recipe sites and use-case content for ingredient queries. A peanut butter brand competing on "công thức sinh tố bơ đậu phộng" is competing against recipe sites, not against grocery retailers.
+4. **Treat AIO as a brand-perception channel, not a transaction channel.** AIO citation for FMCG is more about brand recognition reinforcement than direct conversion. Optimize for that — clear brand attribution in cited content matters more than click-through.
+
+### 5.4 — Healthcare & Pharma (combined: 22,005 rows, 81% AIO rate)
+
+**Market structure.** Among the most AIO-saturated verticals in the dataset (81% combined). Citation concentration is high (top-10 = 45.6%). AIO ↔ top-10 overlap is the **highest in the dataset (66.9%)** — meaning AIO closely tracks organic top-10 in healthcare. This is the most "ranking-determines-citation" market.
+
+**Who already owns it.** Long Châu (11,475) and Vinmec (10,435) lead. Medlatec (9,130), Tâm Anh (6,837), and Bệnh Viện Thu Cúc (4,470) round out the top 5. All five are major Vietnamese healthcare brands with established trust positions: Long Châu is the country's largest pharmacy chain, Vinmec is a premium private-hospital network, Medlatec is a major diagnostic-services provider, Tâm Anh is a tertiary-care hospital chain, and Thu Cúc is a hospital and aesthetic-medicine network.
+
+**Strategic posture.** Defensive for incumbents. Highly defended for challengers. Healthcare is the closest the data shows to a "earned reputation" market: AIO citation strongly correlates with organic ranking, which strongly correlates with brand recognition, which strongly correlates with regulated-credentialing (hospital licensing, pharmacy licensing, medical professional accreditation).
+
+**Tactical priorities for SEO operators in healthcare and pharma.**
+
+1. **E-E-A-T is non-negotiable.** Google's Experience-Expertise-Authoritativeness-Trustworthiness criteria apply with full force in YMYL (Your Money, Your Life) queries — and healthcare is the canonical YMYL category. Author bios with credentialed practitioners, medical reviewers attributed by name, citations to primary sources (Bộ Y Tế, peer-reviewed journals) are table stakes.
+2. **Structured medical schema.** `MedicalCondition`, `Drug`, `MedicalGuideline`, `Hospital` schemas are well-supported by Google. Pages that markup medical content correctly get an authority lift.
+3. **Long-form symptom-to-treatment content.** The dominant queries in healthcare AIO are informational: "triệu chứng tiểu đường", "cách điều trị viêm họng", "uống thuốc kháng sinh có tác dụng phụ gì". Long-form, well-cited, expert-reviewed content for these queries gets cited; thin content or aggressively transactional pages do not.
+4. **Don't fake credentials.** AIO is conservative in healthcare — it has clear preferences for institutional sources. A new healthcare brand without licensing or credentialed practitioners will struggle to break in regardless of content quality. The right move is to build content while building the credentialing position simultaneously.
+
+### 5.5 — Logistics (14,376 rows, 75% AIO rate)
+
+**Market structure.** High AIO saturation (75%). Citation concentration is moderate (top-10 = 29.9%). AIO ↔ top-10 overlap is 57.5% — slightly below the global average. The market is meaningfully concentrated but not winner-take-all.
+
+**Who already owns it.** Three giants and two challengers: GHN (4,862), Viettel Post (4,189), GHTK (3,398), 247Express (2,066), and Supership (1,784). Together these five capture roughly the top of the logistics citation hierarchy.
+
+**Strategic posture.** Defensible-but-permeable for incumbents; viable for well-resourced challengers. The top three (GHN, Viettel Post, GHTK) have meaningful share but not so much that a credible challenger can't enter. Logistics queries are mostly transactional ("phí ship Hà Nội Sài Gòn", "thời gian giao hàng GHTK") and AIO answers them by aggregating across multiple carriers.
+
+**Tactical priorities for SEO operators in logistics.**
+
+1. **Live data pages that AIO can quote.** Pages that publish live or recently-updated shipping rates, transit times, and coverage maps get cited because AIO can extract specific facts. Static sales pages get cited less.
+2. **Tracking-page SEO.** Each carrier has tracking-related queries with high volume. A tracking landing page that surfaces tracking number formats, expected delivery times, and FAQ around delays earns citation share for branded tracking queries.
+3. **Comparison content.** "GHN vs GHTK" and similar comparisons drive citation toward content that organizes the comparison clearly. A neutral comparison post can earn citation for branded carriers' queries — even if the post is on a non-carrier domain.
+4. **Local fulfillment content.** Logistics queries are often regional ("ship hàng HCM đi Hà Nội", "giao hàng tại Đà Nẵng"). Region-specific content with localized data wins citation over generic national content.
+
+### 5.6 — Retail & E-commerce (14,970 rows, 34% AIO rate)
+
+**Market structure.** Lowest AIO saturation in the dataset (34%). Citation concentration is moderate (top-10 = 23.8%). AIO ↔ top-10 overlap is 59.7%.
+
+**Who already owns it.** Major Vietnamese retail and electronics chains: Decathlon (1,469), Cellphones (1,118), Điện Máy Xanh (1,059), Thế Giới Di Động (1,020), FPT Shop (826). The top 5 reflects who dominates Vietnamese branded retail search generally — AIO doesn't dramatically change the picture.
+
+**Strategic posture.** AIO presence is low enough (34%) that retail SEO operators face less AIO displacement risk than other verticals. The main competitive dynamic is still organic rank against the major retail chains and the marketplaces (Shopee, Lazada — which appear less in this dataset because SEONGON's clients are mostly brand-direct).
+
+**Tactical priorities for SEO operators in retail.**
+
+1. **Don't over-invest in AIO defense.** With only 34% of retail queries returning AIO, the direct displacement risk to organic CTR is materially lower than in healthcare or banking. Effort allocation should reflect this — retail SEO is still primarily about ranking and converting, not about earning AIO citation.
+2. **Category page structure for the AIO-eligible queries.** When AIO does appear in retail (commercial-informational hybrid queries — "loại thuốc nhuộm tóc nào tốt nhất"), it tends to cite category pages with curated lists rather than individual product pages. Investing in editorially-curated category pages with attribution wins those queries.
+3. **Brand+keyword pages.** "Quần áo trẻ em Decathlon", "iPhone 15 FPT Shop" type queries have clear AIO behavior — they cite the branded retailer's specific category page. Build these systematically.
+4. **Product schema everywhere.** Even where AIO doesn't directly cite, Product schema feeds into product carousels and rich results that compete with AIO for SERP real estate.
+
+### 5.7 — Education (10,398 rows, 83% AIO rate)
+
+**Market structure.** Highest AIO saturation in the dataset (83%). Citation concentration is moderate (top-10 = 18.3%) but concentrated among universities. AIO ↔ top-10 overlap is the **second-lowest in the dataset (50.6%)** — AIO reaches well outside top-10 to find sources for education queries.
+
+**Who already owns it.** Universities, every single top-5 entry: Hoa Sen (1,760), HUTECH (1,546), FPT University (1,395), UEL (Trường Đại học Kinh tế - Luật, 1,380), and VinUni (1,305). The remainder of the top 25 includes other universities, MOET regulations sites, scholarship aggregators, and education review sites.
+
+**Strategic posture.** Highly institutional. The AIO citation race in education is dominated by accredited universities. New entrants without university accreditation (e.g., language centers, professional certification programs, online education startups) face the steepest entry barrier in the dataset because the existing top-10 is structurally legitimized in a way that's hard to replicate.
+
+**Tactical priorities for SEO operators in education.**
+
+1. **Build for the long-tail AIO question pool.** Education has rich long-tail informational queries ("ngành công nghệ thông tin học gì?", "trường đại học nào tốt nhất ở Việt Nam?"). 50% of citation comes from outside top-10, meaning a well-cited authoritative content page can break into AIO citation without ranking #1.
+2. **Author authority in education content.** Pages with named education professionals (deans, department heads, researchers) attached are more likely to be cited than anonymous content.
+3. **Government/regulator citations.** Pages that cite Bộ Giáo dục regulations, university accreditation rosters, and primary regulatory sources earn AIO trust faster than pages without those references.
+4. **Comparison and ranking content.** "Top universities for X" content earns citation share for institution-comparison queries even from non-university domains. A well-researched, current comparison post can break into the AIO citation set for queries where the universities themselves aren't competing directly.
+
+### 5.8 — Fintech & Payments (15,675 rows, 60% AIO rate)
+
+**Market structure.** Mid-saturation (60%) with moderate concentration (top-10 = 31.0%). AIO ↔ top-10 overlap is 64.3% — slightly above average.
+
+**Who already owns it.** A more diverse mix than banking proper: VNPAY App (3,152), Vexere (2,459) — note: Vexere is travel/booking, not strictly fintech, but classified here because of payment-flow queries — MoMo (1,962), Facebook (1,729), and Thế Giới Di Động (1,703). The mix reflects the boundary-blurring nature of Vietnamese fintech: payment apps, e-wallets, BNPL, and adjacent services like ride-hailing and bookings all overlap.
+
+**Strategic posture.** Faster-moving than banking, more concentrated than retail. The fintech vertical is in active reshuffling — VNPAY, MoMo, ZaloPay, and Cake are all competing for share. SEO operators in this space face an accelerated version of the banking dynamic: same playbook (sitelinks, structured data, long-tail content) but on a shorter time horizon.
+
+**Tactical priorities for SEO operators in fintech.**
+
+1. **Help-content + product-flow content.** "How to send money via MoMo to international account", "VNPAY error code 401" — these are the queries where fintech AIO citation reward is highest. Each app should own its own help-content.
+2. **Comparison content.** Cross-product comparisons ("MoMo vs ZaloPay") earn citation share even for branded queries.
+3. **Compliance and regulation content.** Vietnamese fintech is heavily regulated; pages explaining current regulatory positions (PSD changes, BNPL caps, KYC requirements) earn citation as authoritative regulatory references.
+4. **Newer apps should focus on brand-name + use-case queries.** Generic "best e-wallet" queries are dominated by entrenched players. Better to win citation share on more specific use-cases ("e-wallet for shipping payments", "e-wallet that supports international cards") where the field is wider.
+
+### 5.9 — Software & B2B (7,525 rows, 70% AIO rate)
+
+**Market structure.** Mid-saturation (70%). Citation concentration is the **second-lowest in the dataset (top-10 = 15.1%)** across 4,856 distinct cited domains. AIO ↔ top-10 overlap is 51.8% — among the lowest. This is a long-tail market where AIO actively reaches outside top-10.
+
+**Who already owns it.** Vietnamese accounting software and tax-tooling dominate: Misa AMIS (1,290), Kế Toán An Phá (931), AZTAX (500), and Thư Viện Pháp Luật (702 — a legal-document repository). YouTube (851) appears in the top 5 — unusual but reflects how-to content for accounting workflows.
+
+**Strategic posture.** Greenfield-ish. Long-tail markets like software are where new entrants have the most realistic shot at AIO citation share, but achieving it requires breadth. The accounting-software niche has clear winners; other software niches (CRM, ERP, project management) are even more fragmented.
+
+**Tactical priorities for SEO operators in software/B2B.**
+
+1. **Long-form how-to content per use-case.** AIO reaches deep into long-tail for software queries. A page explaining "how to handle X in Vietnamese accounting" with credible authorial voice and primary-source citations outperforms aggressive product-marketing landing pages.
+2. **Documentation as content.** Software companies' documentation pages are some of the highest-citation content in the vertical. Treating docs as content (with proper meta tags, structured navigation, schema markup) compounds citation share.
+3. **Industry comparison content.** "Best [software type] for Vietnamese SMBs" earns citation share for shopper queries.
+4. **Regulatory references.** Vietnamese accounting/tax software lives next to government regulations. Pages that map regulations to software workflows and cite Thư Viện Pháp Luật earn citation as practical authoritative references.
+
+### 5.10 — Tourism (2,337 rows, 65% AIO rate)
+
+**Market structure.** Mid-saturation (65%). Concentration is moderate (top-10 = 39.0%). AIO ↔ top-10 overlap is the **lowest in the dataset (46.5%)** — AIO reaches further outside organic ranking in tourism than anywhere else.
+
+**Who already owns it.** A strikingly different mix from other verticals: Phi Phi Brazuca (849, a destination-content blog), YouTube (809), Mundo Asia Tours (758, a tour operator — and SEONGON client), Tailandiando.com (341, a Thai travel content site), and Instagram (339). The top 5 has *no* major Vietnamese travel agencies.
+
+**Strategic posture.** Editorially-driven. Tourism AIO citation flows toward content depth (long-form destination content, photo-rich itineraries) rather than transactional booking pages. Major Vietnamese tour operators are conspicuously absent from the top citation set — a strategic gap.
+
+**Tactical priorities for SEO operators in tourism.**
+
+1. **Long-form destination content.** A multi-thousand-word piece on "5-day Bali itinerary for Vietnamese travelers" with structured day-by-day breakdown, photos, and pricing data earns citation share that booking-engine landing pages do not.
+2. **Local Vietnamese-language travel content for foreign destinations.** Phi Phi Brazuca and Tailandiando rank well precisely because they fill a gap: Vietnamese-language content about non-Vietnam destinations. Vietnamese travel operators that publish Vietnamese-language destination content compete at this level.
+3. **Photo + structured-data combination.** Tourism AIO answers often surface photos via image carousels alongside the AIO. Pages with good Image schema + named photographer attribution + travel-specific schema (Trip, TouristAttraction) earn cross-citation across both surfaces.
+4. **The reach-outside-top-10 effect is strongest here.** Don't over-index on rank-1 obsession. A well-cited, well-photographed, well-structured tourism content page can break into AIO citation while ranking position 8 or 9 organically.
+
+### 5.11 — Lifestyle & Household Services (8,415 rows, 66% AIO rate)
+
+**Market structure.** Mid-saturation (66%). Concentration is moderate (top-10 = 31.8%). AIO ↔ top-10 overlap is 62.3%. Notably, the lifestyle vertical's top citations are *dominated by health domains* — reflecting how lifestyle queries blur into health.
+
+**Who already owns it.** Long Châu (2,381), Vinmec (2,327), Medlatec (1,309), bTaskee (1,203 — a household-services app), and Tâm Anh (964). Four of the top 5 are health domains; only bTaskee is genuinely "lifestyle" in the household-services sense.
+
+**Strategic posture.** Health-content dominated. Pure lifestyle brands competing on lifestyle queries face the structural challenge that AIO routes most lifestyle citations to health-credentialed domains. The path forward is either (a) adjacent positioning — pull queries into a specific lifestyle sub-domain (cleaning services, decor, fitness) where lifestyle brands actually compete — or (b) accept that AIO citation share for general lifestyle queries goes to health-credentialed sources.
+
+**Tactical priorities for SEO operators in lifestyle.**
+
+1. **Specialize the sub-vertical.** "Lifestyle" is too broad to compete in directly — but specific sub-niches (home services, fitness coaching, beauty rituals, parenting) have less crowded citation sets.
+2. **Health-adjacent positioning.** Many lifestyle brands sit next to health (supplements, wellness, fitness). Authoritative content that cites medical research, has credentialed authors, and references Bộ Y Tế guidance can win citation share that pure lifestyle content cannot.
+3. **Service review and how-to content.** bTaskee's citation share is built on practical "how to clean X", "how to handle Y" content. This template is replicable.
+
+### 5.12 — Jewelry (2,223 rows, 56% AIO rate)
+
+**Market structure.** Smallest of the major verticals (2,223 rows). Mid-saturation (56%). **Highest concentration in the dataset (top-10 = 48.7%)** — closest to winner-take-all of any vertical, despite being a small market.
+
+**Who already owns it.** A distinctive mix: Goonus.io (769, a jewelry-information blog), PNJ (567, Vietnam's #1 jewelry retailer), Tierra (431), Phú Quý Group (307), and DOJI (282, a major precious-metals trader). The presence of Goonus.io at #1 — a content site, not a retailer — is striking.
+
+**Strategic posture.** Competitive but cracking. Despite high concentration, the #1 spot belongs to a content site rather than the dominant retail brands (PNJ, DOJI). This suggests the AIO citation race in jewelry rewards informational depth over transactional positioning. The defended players are vulnerable on the content axis.
+
+**Tactical priorities for SEO operators in jewelry.**
+
+1. **Educational content over transactional content.** "Cách chọn nhẫn cưới", "phân biệt vàng 18k và 24k" — informational queries are where jewelry AIO citation flows. Goonus.io's #1 position is built on this.
+2. **Material and craftsmanship content.** AIO loves content explaining *why* (why this material, why this craftsmanship technique, why this price point). Brand pages that explain craftsmanship earn citation that pure product pages don't.
+3. **Authority through gemological credentials.** Mention of GIA (Gemological Institute of America) certifications, named gemologists, and structured product data feeds into AIO trust signals.
+
+### 5.13 — Cross-vertical patterns
+
+Three patterns emerge across verticals:
+
+- **Health domains absorb adjacent queries.** Long Châu, Vinmec, and Medlatec appear in the top 5 of *both* healthcare and lifestyle, and Long Châu also leads FMCG. Health-credentialed domains pull citation share from broader query categories.
+- **YouTube appears in long-tail, fragmented verticals.** YouTube enters the top 5 in software, construction, and tourism — verticals where the top-10 captures less than 16% of citations. YouTube's AIO citation rate per appearance is low (1.65), but in long-tail markets that low-density-but-broad presence is enough to crack the top 5.
+- **Verticals with high concentration also have high overlap with top-10.** Healthcare (concentration 45.6%, overlap 67%) and banking (40.5%, 61%) anchor one regime. Construction (12.8%, 53.5%) and education (18.3%, 50.6%) anchor the opposite regime. This is a structural finding: in markets where AIO is winner-take-all, ranking organically maps tightly to citation; in markets where citation is fragmented, AIO reaches deeper.
 
 ---
 
