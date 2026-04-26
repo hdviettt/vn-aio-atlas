@@ -132,6 +132,8 @@ vn-aio-atlas/
 
 **Draft v0.2.** All 10 findings validated, dashboard live, full report (English + Vietnamese) published. Awaiting SEONGON's legal/anonymization clearance for public promotion.
 
+See [CHANGELOG.md](./CHANGELOG.md) for what's new in v0.2.
+
 ## About
 
 A project led by **Hoang Duc Viet** (AI lead at [SEONGON](https://seongon.com)). The dataset is SEONGON's, used with permission for aggregated public publication. The methodology, code, analysis, and writing are mine.
