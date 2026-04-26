@@ -1,0 +1,345 @@
+"""The four headline findings, on the cleaned full corpus.
+
+Each `finding_*` returns a dataframe of results and writes a PNG chart.
+A `run_all` orchestrates the four and prints a summary table.
+
+Findings:
+    1. AIO presence rate by query length (tokens)
+    2. AIO vs organic top-10 citation overlap
+    3. Top cited AIO domains overall and by vertical
+    4. AIO markdown length distribution + week-over-week trend
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import polars as pl
+from rich.console import Console
+from rich.table import Table
+
+from atlas.config import CHARTS_DIR, CLEAN_DIR, RAW_DIR
+
+console = Console()
+plt.rcParams.update(
+    {
+        "figure.figsize": (10, 6),
+        "figure.dpi": 110,
+        "savefig.dpi": 150,
+        "savefig.bbox": "tight",
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.grid": True,
+        "grid.alpha": 0.25,
+        "font.family": "sans-serif",
+    }
+)
+INDIGO = "#4f46e5"
+INDIGO_LIGHT = "#a5b4fc"
+
+
+def _load_meta() -> pl.DataFrame:
+    return pl.read_parquet(CLEAN_DIR / "meta.parquet")
+
+
+def finding_1_query_length(meta: pl.DataFrame) -> pl.DataFrame:
+    """AIO presence rate as a function of query token count.
+
+    Buckets: 1-2, 3-4, 5-6, 7-9, 10+.
+    """
+    df = meta.with_columns(
+        pl.when(pl.col("keyword_token_count") <= 2)
+        .then(pl.lit("1-2"))
+        .when(pl.col("keyword_token_count") <= 4)
+        .then(pl.lit("3-4"))
+        .when(pl.col("keyword_token_count") <= 6)
+        .then(pl.lit("5-6"))
+        .when(pl.col("keyword_token_count") <= 9)
+        .then(pl.lit("7-9"))
+        .otherwise(pl.lit("10+"))
+        .alias("bucket")
+    )
+    result = (
+        df.group_by("bucket")
+        .agg(
+            pl.len().alias("rows"),
+            pl.col("has_ai_overview").sum().alias("aio_rows"),
+        )
+        .with_columns(((pl.col("aio_rows") / pl.col("rows")) * 100).round(1).alias("aio_pct"))
+        .sort("bucket")
+    )
+    # Order buckets sensibly
+    order = ["1-2", "3-4", "5-6", "7-9", "10+"]
+    result = pl.concat(
+        [result.filter(pl.col("bucket") == b) for b in order if result.filter(pl.col("bucket") == b).height]
+    )
+
+    # Plot
+    fig, ax = plt.subplots()
+    bars = ax.bar(result["bucket"], result["aio_pct"], color=INDIGO, edgecolor="white", width=0.7)
+    ax.set_xlabel("query token count (words)")
+    ax.set_ylabel("AIO presence rate (%)")
+    ax.set_title("AI Overview presence rate scales with query length", loc="left", weight="bold")
+    ax.set_ylim(0, 100)
+    for bar, pct, n in zip(bars, result["aio_pct"], result["rows"], strict=True):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 1.5,
+            f"{pct:.1f}%\nn={n:,}",
+            ha="center",
+            fontsize=9,
+        )
+    out = CHARTS_DIR / "f1_query_length_vs_aio.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
+def finding_2_top10_overlap() -> dict[str, float]:
+    """For AIO-positive rows: how many AIO citations also appear in organic top-10?
+
+    Joins:
+        aio_refs_domains.parquet (id -> cited_domains)
+        organic_top10.parquet    (id -> top10_domains)
+    Returns aggregate stats (averages across rows).
+    """
+    refs = pl.read_parquet(RAW_DIR / "aio_refs_domains.parquet")
+    org = pl.read_parquet(RAW_DIR / "organic_top10.parquet")
+
+    joined = refs.join(org.select("id", "top10_domains"), on="id", how="inner")
+
+    # Polars-native list set operations (no map_elements needed).
+    stats = joined.with_columns(
+        pl.col("cited_domains").list.len().alias("n_cited"),
+        pl.col("top10_domains").list.len().alias("n_top10"),
+        pl.col("cited_domains")
+        .list.set_intersection(pl.col("top10_domains"))
+        .list.len()
+        .alias("n_overlap"),
+    ).with_columns(
+        pl.when(pl.col("n_cited") > 0)
+        .then(pl.col("n_overlap") / pl.col("n_cited"))
+        .otherwise(0.0)
+        .alias("pct_cited_in_top10")
+    )
+
+    summary = {
+        "rows_analyzed": stats.height,
+        "avg_cited": float(stats["n_cited"].mean()),
+        "avg_top10": float(stats["n_top10"].mean()),
+        "avg_overlap": float(stats["n_overlap"].mean()),
+        "pct_cited_in_top10": float(stats["pct_cited_in_top10"].mean()),
+    }
+
+    # Distribution chart: histogram of pct_cited_in_top10 across rows
+    fig, ax = plt.subplots()
+    ax.hist(
+        stats["pct_cited_in_top10"].to_numpy() * 100,
+        bins=20,
+        color=INDIGO,
+        edgecolor="white",
+    )
+    ax.set_xlabel("% of AIO citations that also appear in organic top-10 (per query)")
+    ax.set_ylabel("number of queries")
+    ax.set_title(
+        f"AIO citations vs organic top-10 overlap "
+        f"(avg = {summary['pct_cited_in_top10'] * 100:.1f}%)",
+        loc="left",
+        weight="bold",
+    )
+    out = CHARTS_DIR / "f2_top10_overlap_distribution.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return summary
+
+
+def finding_3_top_cited_domains(top_k: int = 25) -> pl.DataFrame:
+    """Top AIO-cited domains overall, with a citation-density column.
+
+    citation_density = citations / distinct_keywords
+    Higher density = the domain gets cited multiple times for the same query
+    (deep authority on its keywords). Lower density = spread thin (one
+    citation per keyword across many keywords). Surfaces the
+    UGC-vs-info-vertical citation pattern.
+    """
+    refs = pl.read_parquet(RAW_DIR / "aio_refs_domains.parquet")
+
+    exploded = refs.explode("cited_domains").rename({"cited_domains": "domain"}).filter(
+        pl.col("domain").is_not_null()
+    )
+    result = (
+        exploded.group_by("domain")
+        .agg(
+            pl.len().alias("citations"),
+            pl.col("keyword").n_unique().alias("distinct_kws"),
+        )
+        .with_columns(
+            (pl.col("citations") / pl.col("distinct_kws")).round(2).alias("citation_density")
+        )
+        .sort("citations", descending=True)
+        .head(top_k)
+    )
+
+    fig, ax = plt.subplots(figsize=(10, max(6, top_k * 0.3)))
+    ax.barh(result["domain"][::-1], result["citations"][::-1], color=INDIGO, edgecolor="white")
+    # Annotate each bar with its citation density
+    for i, (cit, dens) in enumerate(zip(result["citations"][::-1], result["citation_density"][::-1], strict=True)):
+        ax.text(
+            cit + max(result["citations"]) * 0.005,
+            i,
+            f"density {dens:.2f}",
+            va="center",
+            fontsize=8,
+            color="#475569",
+        )
+    ax.set_xlabel("AIO citations (count)")
+    ax.set_title(
+        f"Top {top_k} AIO-cited domains in Vietnamese commercial search\n"
+        "(annotation: citations per distinct keyword — deep vs spread citation pattern)",
+        loc="left",
+        weight="bold",
+        fontsize=11,
+    )
+    out = CHARTS_DIR / "f3_top_cited_domains.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
+def finding_5_aio_rate_by_vertical(meta: pl.DataFrame) -> pl.DataFrame:
+    """AIO appearance rate by vertical — reveals which verticals AIO dominates."""
+    result = (
+        meta.group_by("vertical")
+        .agg(
+            pl.len().alias("rows"),
+            pl.col("has_ai_overview").sum().alias("aio_rows"),
+        )
+        .with_columns(((pl.col("aio_rows") / pl.col("rows")) * 100).round(1).alias("aio_pct"))
+        .filter(pl.col("rows") >= 1000)  # exclude tiny verticals
+        .sort("aio_pct", descending=True)
+    )
+    fig, ax = plt.subplots(figsize=(10, max(5, result.height * 0.45)))
+    ax.barh(result["vertical"][::-1], result["aio_pct"][::-1], color=INDIGO, edgecolor="white")
+    for i, (pct, n) in enumerate(zip(result["aio_pct"][::-1], result["rows"][::-1], strict=True)):
+        ax.text(pct + 1, i, f"{pct:.1f}%  (n={n:,})", va="center", fontsize=9)
+    ax.set_xlabel("AIO presence rate (%)")
+    ax.set_xlim(0, 100)
+    ax.set_title(
+        "AI Overview presence rate by SEONGON-client vertical",
+        loc="left",
+        weight="bold",
+    )
+    out = CHARTS_DIR / "f5_aio_rate_by_vertical.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
+def finding_4_aio_length_over_time(meta: pl.DataFrame) -> pl.DataFrame:
+    """AIO markdown length: distribution + weekly trend."""
+    aio = meta.filter(pl.col("has_ai_overview") == 1).filter(pl.col("aio_md_len") > 0)
+
+    weekly = (
+        aio.with_columns(pl.col("created_at").dt.truncate("1w").alias("week"))
+        .group_by("week")
+        .agg(
+            pl.len().alias("rows"),
+            pl.col("aio_md_len").mean().round(0).cast(pl.Int64).alias("avg_chars"),
+            pl.col("aio_md_len").median().cast(pl.Int64).alias("p50_chars"),
+            pl.col("aio_md_len").quantile(0.9).cast(pl.Int64).alias("p90_chars"),
+        )
+        .sort("week")
+    )
+
+    # Chart: weekly avg + p50 + p90
+    fig, ax = plt.subplots()
+    ax.plot(weekly["week"], weekly["p90_chars"], color=INDIGO_LIGHT, lw=1.5, label="p90")
+    ax.plot(weekly["week"], weekly["avg_chars"], color=INDIGO, lw=2.5, label="avg")
+    ax.plot(weekly["week"], weekly["p50_chars"], color="#1e1b4b", lw=1.5, label="p50")
+    ax.set_xlabel("week")
+    ax.set_ylabel("AIO markdown length (chars)")
+    ax.set_title("AIO length over time", loc="left", weight="bold")
+    ax.legend(loc="upper right", frameon=False)
+    fig.autofmt_xdate()
+    out = CHARTS_DIR / "f4_aio_length_over_time.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return weekly
+
+
+def run_all() -> None:
+    console.log("[bold cyan]Loading cleaned meta[/]")
+    meta = _load_meta()
+    console.log(f"  {len(meta):,} rows · AIO+ {meta.filter(pl.col('has_ai_overview') == 1).height:,}")
+
+    console.log("\n[bold]Finding 1 — query length vs AIO[/]")
+    f1 = finding_1_query_length(meta)
+    t1 = Table(title="F1: AIO presence by query token count")
+    t1.add_column("bucket")
+    t1.add_column("rows", justify="right")
+    t1.add_column("aio rows", justify="right")
+    t1.add_column("aio %", justify="right")
+    for r in f1.iter_rows(named=True):
+        t1.add_row(r["bucket"], f"{r['rows']:,}", f"{r['aio_rows']:,}", f"{r['aio_pct']}%")
+    console.print(t1)
+
+    console.log("\n[bold]Finding 2 — AIO vs organic top-10 overlap[/]")
+    f2 = finding_2_top10_overlap()
+    console.print(
+        f"  rows analyzed: {f2['rows_analyzed']:,}\n"
+        f"  avg cited per query: {f2['avg_cited']:.2f}\n"
+        f"  avg organic top-10 per query: {f2['avg_top10']:.2f}\n"
+        f"  avg overlap: {f2['avg_overlap']:.2f}\n"
+        f"  pct of AIO citations also in top-10: {f2['pct_cited_in_top10'] * 100:.1f}%"
+    )
+
+    console.log("\n[bold]Finding 3 — top cited domains + density[/]")
+    f3 = finding_3_top_cited_domains(top_k=25)
+    t3 = Table(title="F3: Top 25 cited AIO domains (density = citations / distinct keywords)")
+    t3.add_column("domain")
+    t3.add_column("citations", justify="right")
+    t3.add_column("distinct kws", justify="right")
+    t3.add_column("density", justify="right")
+    for r in f3.iter_rows(named=True):
+        t3.add_row(
+            r["domain"],
+            f"{r['citations']:,}",
+            f"{r['distinct_kws']:,}",
+            f"{r['citation_density']:.2f}",
+        )
+    console.print(t3)
+
+    console.log("\n[bold]Finding 4 — AIO length over time[/]")
+    f4 = finding_4_aio_length_over_time(meta)
+    if not f4.is_empty():
+        first_avg = f4["avg_chars"][0]
+        last_avg = f4["avg_chars"][-1]
+        delta = last_avg - first_avg
+        pct = (delta / first_avg) * 100 if first_avg else 0.0
+        console.print(
+            f"  weeks: {f4.height}\n"
+            f"  first-week avg: {first_avg:,} chars\n"
+            f"  last-week avg: {last_avg:,} chars\n"
+            f"  delta: {delta:+,} ({pct:+.1f}%)"
+        )
+
+    console.log("\n[bold]Finding 5 — AIO rate by vertical[/]")
+    f5 = finding_5_aio_rate_by_vertical(meta)
+    t5 = Table(title="F5: AIO presence rate by client vertical (>= 1K rows)")
+    t5.add_column("vertical")
+    t5.add_column("rows", justify="right")
+    t5.add_column("aio rows", justify="right")
+    t5.add_column("aio %", justify="right")
+    for r in f5.iter_rows(named=True):
+        t5.add_row(r["vertical"], f"{r['rows']:,}", f"{r['aio_rows']:,}", f"{r['aio_pct']}%")
+    console.print(t5)
+
+
+if __name__ == "__main__":
+    run_all()
