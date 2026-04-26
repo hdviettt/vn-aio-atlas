@@ -3,9 +3,45 @@
 ### An empirical study of Google AI Overview behavior on Vietnamese commercial search, December 2025 – April 2026
 
 **Author:** Hoang Duc Viet, AI Lead, SEONGON
-**Status:** Draft v0.1 (preliminary; subject to legal/anonymization clearance)
+**Status:** Draft v0.2 (preliminary; subject to legal/anonymization clearance)
 **Live dashboard:** [vn-aio-atlas-dashboard-production.up.railway.app](https://vn-aio-atlas-dashboard-production.up.railway.app)
 **Code & data infrastructure:** [github.com/hdviettt/vn-aio-atlas](https://github.com/hdviettt/vn-aio-atlas)
+**Vietnamese version:** [REPORT_vi.md](./REPORT_vi.md)
+
+---
+
+## Table of Contents
+
+- [Executive Summary](#executive-summary)
+- [Why This Study Exists](#why-this-study-exists)
+- [Methodology](#methodology)
+- [Section 1 — How Pervasive Is AI Overview in Vietnamese Commercial Search?](#section-1--how-pervasive-is-ai-overview-in-vietnamese-commercial-search)
+- [Section 2 — Where Does AIO Pull Sources From?](#section-2--where-does-aio-pull-sources-from)
+- [Section 3 — Citation Density: Banks Versus UGC Platforms](#section-3--citation-density-banks-versus-ugc-platforms)
+- [Section 4 — What Makes a URL Get Cited?](#section-4--what-makes-a-url-get-cited-section-in-progress)
+- [Section 5 — Implications by Vertical](#section-5--implications-by-vertical)
+  - [5.1 Banking](#51--banking-47405-rows-77-aio-rate)
+  - [5.2 Construction & Building Materials](#52--construction--building-materials-48455-rows-48-aio-rate)
+  - [5.3 FMCG & Consumer Goods](#53--fmcg--consumer-goods-28461-rows-60-aio-rate)
+  - [5.4 Healthcare & Pharma](#54--healthcare--pharma-combined-22005-rows-81-aio-rate)
+  - [5.5 Logistics](#55--logistics-14376-rows-75-aio-rate)
+  - [5.6 Retail & E-commerce](#56--retail--e-commerce-14970-rows-34-aio-rate)
+  - [5.7 Education](#57--education-10398-rows-83-aio-rate)
+  - [5.8 Fintech & Payments](#58--fintech--payments-15675-rows-60-aio-rate)
+  - [5.9 Software & B2B](#59--software--b2b-7525-rows-70-aio-rate)
+  - [5.10 Tourism](#510--tourism-2337-rows-65-aio-rate)
+  - [5.11 Lifestyle & Household Services](#511--lifestyle--household-services-8415-rows-66-aio-rate)
+  - [5.12 Jewelry](#512--jewelry-2223-rows-56-aio-rate)
+  - [5.13 Cross-vertical patterns](#513--cross-vertical-patterns)
+- [Section 6 — Operational Implications for SEO Operators](#section-6--operational-implications-for-seo-operators)
+  - [6.1 Four moves with the largest expected impact](#61--the-four-moves-with-the-largest-expected-impact)
+  - [6.2 Two anti-priorities](#62--the-two-moves-you-might-be-over-investing-in)
+  - [6.3 Per-vertical priority mix](#63--per-vertical-priority-mix)
+  - [6.4 Measurement framework](#64--measurement-framework)
+  - [6.5 90-day operator checklist](#65--a-90-day-operator-checklist)
+  - [6.6 What not to do](#66--what-not-to-do)
+- [Section 7 — Limitations and Open Questions](#section-7--limitations-and-open-questions)
+- [About](#about)
 
 ---
 
@@ -612,6 +648,6 @@ This study would not exist without:
 
 ---
 
-*Status: Draft v0.1. Sections 5 and 6 are outlined but not fully written. Sections 4 and 7 are complete in their current form. The full study will be released after legal/anonymization review by SEONGON.*
+*Status: Draft v0.2. All sections are now complete in narrative form. Sections 5 and 6 represent substantive new content over v0.1. The full study will be released after legal/anonymization review by SEONGON.*
 
 *Last updated: April 2026.*

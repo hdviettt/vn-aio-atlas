@@ -3,11 +3,26 @@
 ### Nghiên cứu thực nghiệm về cách Google AI Overview hoạt động trên thị trường tìm kiếm thương mại Việt Nam, từ tháng 12/2025 đến tháng 4/2026
 
 **Tác giả:** Hoàng Đức Việt, AI Lead, SEONGON
-**Trạng thái:** Bản dự thảo v0.1 (sơ bộ; chờ duyệt pháp lý/ẩn danh)
+**Trạng thái:** Bản dự thảo v0.2 (sơ bộ; chờ duyệt pháp lý/ẩn danh)
 **Dashboard trực tiếp:** [vn-aio-atlas-dashboard-production.up.railway.app](https://vn-aio-atlas-dashboard-production.up.railway.app)
 **Mã nguồn & hạ tầng dữ liệu:** [github.com/hdviettt/vn-aio-atlas](https://github.com/hdviettt/vn-aio-atlas)
+**Phiên bản tiếng Anh:** [REPORT.md](./REPORT.md)
 
-> **Phiên bản tiếng Anh:** [REPORT.md](./REPORT.md). Bản tiếng Việt này dịch đầy đủ Tóm tắt Điều hành, Lý do nghiên cứu, Phương pháp luận, Phần 1–7. Phần 1–4 dịch tóm lược; Phần 5 (Hệ quả theo ngành) và Phần 6 (Playbook operator) dịch đầy đủ.
+---
+
+## Mục lục
+
+- [Tóm tắt Điều hành](#tóm-tắt-điều-hành)
+- [Lý do nghiên cứu này tồn tại](#lý-do-nghiên-cứu-này-tồn-tại)
+- [Phương pháp luận](#phương-pháp-luận)
+- [Phần 1 — AIO phổ biến đến mức nào trên tìm kiếm thương mại Việt Nam?](#phần-1--aio-phổ-biến-đến-mức-nào-trên-tìm-kiếm-thương-mại-việt-nam)
+- [Phần 2 — AIO lấy nguồn từ đâu?](#phần-2--aio-lấy-nguồn-từ-đâu)
+- [Phần 3 — Mật độ trích nguồn: Ngân hàng so với nền tảng UGC](#phần-3--mật-độ-trích-nguồn-ngân-hàng-so-với-nền-tảng-ugc)
+- [Phần 4 — Điều gì khiến URL được trích?](#phần-4--điều-gì-khiến-url-được-trích)
+- [Phần 5 — Hệ quả theo ngành](#phần-5--hệ-quả-theo-ngành)
+- [Phần 6 — Hệ quả vận hành cho operator SEO](#phần-6--hệ-quả-vận-hành-cho-operator-seo)
+- [Phần 7 — Hạn chế và câu hỏi mở](#phần-7--hạn-chế-và-câu-hỏi-mở)
+- [Về tác giả](#về-tác-giả)
 
 ---
 
@@ -580,6 +595,6 @@ Liên hệ: hoangducviet@seongon.com hoặc qua [hoangducviet.work](https://hoan
 
 ---
 
-*Trạng thái: Bản dự thảo v0.1 (tiếng Việt rút gọn). Phần 1–4 và 7 dịch đầy đủ. Phần 5 và 6 tóm lược; nội dung chi tiết sẽ có ở v0.2. Báo cáo đầy đủ sẽ được phát hành sau khi SEONGON hoàn tất rà soát pháp lý/ẩn danh.*
+*Trạng thái: Bản dự thảo v0.2. Tất cả các phần đã có nội dung tường thuật đầy đủ. Phần 5 và 6 là nội dung mới đáng kể so với v0.1. Báo cáo đầy đủ sẽ được phát hành sau khi SEONGON hoàn tất rà soát pháp lý/ẩn danh.*
 
 *Cập nhật lần cuối: tháng 4/2026.*
