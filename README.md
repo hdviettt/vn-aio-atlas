@@ -51,6 +51,51 @@ breakdown with charts and methodology in **[FINDINGS.md](./FINDINGS.md)**.
 - Not a tracking SaaS. Profound, Peec, AthenaHQ, HubSpot AEO already exist. This is a research artifact, not a recurring monitoring product.
 - Not anonymous data dump. Where data is published it will be aggregated to vertical or domain level — never raw client SERPs.
 
+## Architecture
+
+Three-tier data flow:
+
+```
+SEONGON Supabase (read-only)         <- source of truth, raw client SERP data
+        │
+        ▼  scripts/run_pull.py
+data/raw/*.parquet (gitignored)      <- per-row pulls cached locally
+        │
+        ▼  scripts/run_clean.py
+data/clean/meta.parquet (gitignored) <- anonymized + vertical-tagged
+        │
+        ▼  scripts/run_load.py
+Atlas Postgres (Railway)             <- analytical store + findings tables
+        │
+        ▼  (planned)
+aio-atlas.seongon.com dashboard
+```
+
+The Atlas's own analytical Postgres (Railway, schema `atlas`) holds
+the cleaned mirror tables, exploded citation/top-10 events, and
+persisted findings tables. This is what the public dashboard will
+read from. Source raw data never leaves SEONGON's Supabase.
+
+Key Atlas tables:
+
+- `atlas.projects` (331) — vertical-tagged client projects
+- `atlas.keyword_results` (231,365) — cleaned, vertical-tagged
+- `atlas.aio_citations` (1,097,839) — exploded citation events
+- `atlas.organic_top10` (1,162,363) — exploded top-10 organic events
+- `atlas.f1_*` … `atlas.f6_*` — persisted findings tables
+
+## Reproducing the analysis
+
+```bash
+cd vn-aio-atlas
+uv sync                                # install deps
+cp .env.example .env                   # then fill in credentials
+uv run python scripts/run_pull.py      # SEONGON Supabase -> data/raw/*.parquet
+uv run python scripts/run_clean.py     # data/raw -> data/clean (anonymized)
+uv run python scripts/run_load.py      # data/clean -> Atlas Postgres + findings
+uv run python scripts/run_findings.py  # generates charts/ from cleaned parquet
+```
+
 ## Status
 
 **Planning.** See [PLANNING.md](./PLANNING.md) for the methodology, anonymization plan, analytical questions, milestones, and publication strategy.
