@@ -63,6 +63,44 @@ CREATE TABLE atlas.organic_top10 (
 );
 CREATE INDEX idx_top10_domain ON atlas.organic_top10 (domain);
 
+-- AIO reference URLs (more granular than aio_citations — keeps URL + position)
+CREATE TABLE atlas.aio_references (
+    keyword_result_id  integer NOT NULL REFERENCES atlas.keyword_results(id),
+    ref_position       text,
+    ref_domain         text NOT NULL,
+    ref_url            text NOT NULL
+);
+CREATE INDEX idx_refs_kr      ON atlas.aio_references (keyword_result_id);
+CREATE INDEX idx_refs_domain  ON atlas.aio_references (ref_domain);
+
+-- Per-organic-result feature row for AIO-positive SERPs.
+-- One row per (keyword_result_id, organic_url). Used for cited-vs-uncited
+-- feature comparisons in Section 4 of the report.
+CREATE TABLE atlas.organic_features (
+    keyword_result_id     integer NOT NULL REFERENCES atlas.keyword_results(id),
+    rank_absolute         integer,
+    domain                text,
+    url                   text NOT NULL,
+    title                 text,
+    description           text,
+    breadcrumb            text,
+    title_length          integer,
+    description_length    integer,
+    is_featured_snippet   boolean,
+    has_sitelinks         boolean,
+    has_faq               boolean,
+    has_rating            boolean,
+    has_price             boolean,
+    has_highlighted       boolean,
+    -- Citation flags joined at load time
+    domain_cited          boolean NOT NULL DEFAULT FALSE,
+    url_cited             boolean NOT NULL DEFAULT FALSE
+);
+CREATE INDEX idx_orgfeat_kr           ON atlas.organic_features (keyword_result_id);
+CREATE INDEX idx_orgfeat_domain       ON atlas.organic_features (domain);
+CREATE INDEX idx_orgfeat_domain_cited ON atlas.organic_features (domain_cited);
+CREATE INDEX idx_orgfeat_url_cited    ON atlas.organic_features (url_cited);
+
 -- ─── Derived findings (persisted, refreshed by load step) ─────────────
 
 CREATE TABLE atlas.f1_query_length_aio (
@@ -130,6 +168,17 @@ CREATE TABLE atlas.f8_overlap_by_vertical (
     avg_top10            numeric(10,4) NOT NULL,
     avg_overlap          numeric(10,4) NOT NULL,
     pct_cited_in_top10   numeric(6,4) NOT NULL
+);
+
+-- F9 — Feature comparison: cited vs uncited URLs in AIO-positive SERPs
+CREATE TABLE atlas.f9_cited_vs_uncited_features (
+    feature              text NOT NULL,
+    cited_value          numeric(12,4) NOT NULL,
+    uncited_value        numeric(12,4) NOT NULL,
+    relative_diff_pct    numeric(8,2),  -- (cited - uncited) / uncited * 100
+    n_cited              integer NOT NULL,
+    n_uncited            integer NOT NULL,
+    PRIMARY KEY (feature)
 );
 
 -- ─── Run metadata ────────────────────────────────────────────────────

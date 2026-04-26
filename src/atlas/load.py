@@ -165,6 +165,104 @@ def load_aio_citations(conn: Connection) -> int:
     return n
 
 
+def load_aio_references(conn: Connection) -> int:
+    """Per-reference (kr_id, ref_position, ref_domain, ref_url) — one row per cited URL."""
+    src = RAW_DIR / "aio_refs_urls.parquet"
+    if not src.exists():
+        console.log("  atlas.aio_references: skipped (parquet missing)")
+        return 0
+    refs = pl.read_parquet(src)
+    valid_ids = set(
+        pl.read_parquet(CLEAN_DIR / "meta.parquet").select("id").to_series().to_list()
+    )
+    refs = (
+        refs.filter(pl.col("keyword_result_id").is_in(valid_ids))
+        .select("keyword_result_id", "ref_position", "ref_domain", "ref_url")
+        .filter(pl.col("ref_url").is_not_null())
+    )
+    _truncate(conn, "atlas.aio_references")
+    n = _copy_df(
+        conn,
+        refs,
+        "atlas.aio_references",
+        ["keyword_result_id", "ref_position", "ref_domain", "ref_url"],
+    )
+    console.log(f"  atlas.aio_references: {n:,} rows")
+    return n
+
+
+def load_organic_features(conn: Connection) -> int:
+    """Per-organic-result feature row, with citation flags joined at load time."""
+    src = RAW_DIR / "organic_features.parquet"
+    if not src.exists():
+        console.log("  atlas.organic_features: skipped (parquet missing)")
+        return 0
+    feats = pl.read_parquet(src)
+    valid_ids = set(
+        pl.read_parquet(CLEAN_DIR / "meta.parquet").select("id").to_series().to_list()
+    )
+    feats = feats.filter(pl.col("keyword_result_id").is_in(valid_ids))
+
+    _truncate(conn, "atlas.organic_features")
+
+    # Initial load without citation flags (they're computed via SQL update afterward)
+    base_cols = [
+        "keyword_result_id",
+        "rank_absolute",
+        "domain",
+        "url",
+        "title",
+        "description",
+        "breadcrumb",
+        "title_length",
+        "description_length",
+        "is_featured_snippet",
+        "has_sitelinks",
+        "has_faq",
+        "has_rating",
+        "has_price",
+        "has_highlighted",
+    ]
+    n = _copy_df(conn, feats.select(base_cols), "atlas.organic_features", base_cols)
+    console.log(f"  atlas.organic_features: {n:,} rows (citation flags pending)")
+
+    with conn.cursor() as cur:
+        # Domain-level citation flag: this URL's domain was cited for this query
+        cur.execute(
+            """
+            UPDATE atlas.organic_features f
+               SET domain_cited = TRUE
+             WHERE EXISTS (
+                SELECT 1 FROM atlas.aio_citations c
+                 WHERE c.keyword_result_id = f.keyword_result_id
+                   AND c.domain = f.domain
+             )
+            """
+        )
+        cur.execute("SELECT COUNT(*) FROM atlas.organic_features WHERE domain_cited")
+        domain_cited = cur.fetchone()[0]
+        console.log(f"  domain_cited flag set on {domain_cited:,} rows")
+
+        # URL-level citation flag: best-effort match against atlas.aio_references.
+        # Compares URLs after stripping fragments (#:~:text=… etc).
+        cur.execute(
+            """
+            UPDATE atlas.organic_features f
+               SET url_cited = TRUE
+             WHERE EXISTS (
+                SELECT 1 FROM atlas.aio_references r
+                 WHERE r.keyword_result_id = f.keyword_result_id
+                   AND split_part(r.ref_url, '#', 1) = split_part(f.url, '#', 1)
+             )
+            """
+        )
+        cur.execute("SELECT COUNT(*) FROM atlas.organic_features WHERE url_cited")
+        url_cited = cur.fetchone()[0]
+        console.log(f"  url_cited flag set on {url_cited:,} rows")
+
+    return n
+
+
 def load_organic_top10(conn: Connection) -> int:
     org = pl.read_parquet(RAW_DIR / "organic_top10.parquet")
     valid_ids = set(
@@ -457,6 +555,86 @@ def compute_findings(conn: Connection) -> None:
             """
         )
 
+        # F9 — cited vs uncited URL feature comparison.
+        # Compares boolean rates and average lengths of organic results
+        # whose URL was cited in the AIO vs those that weren't, restricted
+        # to AIO-positive SERPs only.
+        cur.execute("TRUNCATE atlas.f9_cited_vs_uncited_features")
+        cur.execute(
+            """
+            WITH cited AS (
+                SELECT * FROM atlas.organic_features WHERE url_cited
+            ),
+            uncited AS (
+                SELECT * FROM atlas.organic_features WHERE NOT url_cited
+            ),
+            stats AS (
+                SELECT
+                    'avg_title_length' AS feature,
+                    (SELECT AVG(title_length) FROM cited) AS cited_value,
+                    (SELECT AVG(title_length) FROM uncited) AS uncited_value,
+                    (SELECT COUNT(*) FROM cited) AS n_cited,
+                    (SELECT COUNT(*) FROM uncited) AS n_uncited
+                UNION ALL
+                SELECT 'avg_description_length',
+                    (SELECT AVG(description_length) FROM cited),
+                    (SELECT AVG(description_length) FROM uncited),
+                    (SELECT COUNT(*) FROM cited),
+                    (SELECT COUNT(*) FROM uncited)
+                UNION ALL
+                SELECT 'avg_rank_absolute',
+                    (SELECT AVG(rank_absolute) FROM cited),
+                    (SELECT AVG(rank_absolute) FROM uncited),
+                    (SELECT COUNT(*) FROM cited),
+                    (SELECT COUNT(*) FROM uncited)
+                UNION ALL
+                SELECT 'pct_is_featured_snippet',
+                    (SELECT 100.0 * AVG(CASE WHEN is_featured_snippet THEN 1 ELSE 0 END) FROM cited),
+                    (SELECT 100.0 * AVG(CASE WHEN is_featured_snippet THEN 1 ELSE 0 END) FROM uncited),
+                    (SELECT COUNT(*) FROM cited),
+                    (SELECT COUNT(*) FROM uncited)
+                UNION ALL
+                SELECT 'pct_has_sitelinks',
+                    (SELECT 100.0 * AVG(CASE WHEN has_sitelinks THEN 1 ELSE 0 END) FROM cited),
+                    (SELECT 100.0 * AVG(CASE WHEN has_sitelinks THEN 1 ELSE 0 END) FROM uncited),
+                    (SELECT COUNT(*) FROM cited),
+                    (SELECT COUNT(*) FROM uncited)
+                UNION ALL
+                SELECT 'pct_has_faq',
+                    (SELECT 100.0 * AVG(CASE WHEN has_faq THEN 1 ELSE 0 END) FROM cited),
+                    (SELECT 100.0 * AVG(CASE WHEN has_faq THEN 1 ELSE 0 END) FROM uncited),
+                    (SELECT COUNT(*) FROM cited),
+                    (SELECT COUNT(*) FROM uncited)
+                UNION ALL
+                SELECT 'pct_has_rating',
+                    (SELECT 100.0 * AVG(CASE WHEN has_rating THEN 1 ELSE 0 END) FROM cited),
+                    (SELECT 100.0 * AVG(CASE WHEN has_rating THEN 1 ELSE 0 END) FROM uncited),
+                    (SELECT COUNT(*) FROM cited),
+                    (SELECT COUNT(*) FROM uncited)
+                -- pct_has_price excluded: the source SQL in pull.py v1
+                -- counted JSON-null as "has price". Fixed in pull.py v2 but
+                -- the existing parquet was pulled with v1. Re-pull would
+                -- re-introduce the stalls we hit; sticking with v1 data
+                -- and dropping this metric for now.
+                UNION ALL
+                SELECT 'pct_has_highlighted',
+                    (SELECT 100.0 * AVG(CASE WHEN has_highlighted THEN 1 ELSE 0 END) FROM cited),
+                    (SELECT 100.0 * AVG(CASE WHEN has_highlighted THEN 1 ELSE 0 END) FROM uncited),
+                    (SELECT COUNT(*) FROM cited),
+                    (SELECT COUNT(*) FROM uncited)
+            )
+            INSERT INTO atlas.f9_cited_vs_uncited_features
+                  (feature, cited_value, uncited_value, relative_diff_pct, n_cited, n_uncited)
+            SELECT feature,
+                   ROUND(cited_value::numeric, 4),
+                   ROUND(uncited_value::numeric, 4),
+                   ROUND(100.0 * (cited_value - uncited_value)
+                                / NULLIF(uncited_value, 0)::numeric, 2),
+                   n_cited, n_uncited
+            FROM stats
+            """
+        )
+
         # Run metadata
         cur.execute(
             """
@@ -469,7 +647,7 @@ def compute_findings(conn: Connection) -> None:
             (datetime.utcnow(),),
         )
 
-    console.log("  findings tables populated (F1-F8)")
+    console.log("  findings tables populated (F1-F9)")
 
 
 def run_load() -> None:
@@ -482,6 +660,8 @@ def run_load() -> None:
         load_keyword_results(conn)
         load_aio_citations(conn)
         load_organic_top10(conn)
+        load_aio_references(conn)
+        load_organic_features(conn)
 
     console.log("\n[bold]Computing findings tables[/]")
     with atlas_conn() as conn:

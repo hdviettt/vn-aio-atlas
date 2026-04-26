@@ -187,11 +187,204 @@ def pull_organic_top10(chunk_size: int = 5_000) -> Path:
     return out
 
 
+def pull_aio_refs_urls(chunk_size: int = 20_000) -> Path:
+    """Per-reference: (keyword_result_id, ref_position, domain, url).
+
+    More fine-grained than pull_aio_refs_domains — needed for URL-level
+    matching against organic results in Section 4.
+    """
+    out = RAW_DIR / "aio_refs_urls.parquet"
+    console.log(f"[bold]Pulling AIO ref URLs[/] -> {out}")
+    sql = """
+    SELECT id AS keyword_result_id,
+           keyword,
+           ref->>'position' AS ref_position,
+           ref->>'domain'   AS ref_domain,
+           ref->>'url'      AS ref_url
+      FROM keyword_results,
+           jsonb_array_elements(aio_references::jsonb) AS ref
+     WHERE has_ai_overview = 1
+       AND aio_references IS NOT NULL
+       AND aio_references NOT LIKE '%%\\u0000%%'
+       AND ref->>'url' IS NOT NULL
+       AND id > %s
+     ORDER BY id
+     LIMIT %s
+    """
+    all_chunks: list[pl.DataFrame] = []
+    last_id = 0
+    pbar = tqdm(desc="ref rows pulled", unit="row")
+    while True:
+        with _connect() as conn, conn.cursor() as cur:
+            cur.execute(sql, (last_id, chunk_size))
+            rows = cur.fetchall()
+        if not rows:
+            break
+        df = pl.DataFrame(rows)
+        all_chunks.append(df)
+        last_id = int(df["keyword_result_id"].max())
+        pbar.update(len(df))
+        if len(rows) < chunk_size:
+            break
+    pbar.close()
+    full = pl.concat(all_chunks, how="vertical_relaxed") if all_chunks else pl.DataFrame()
+    full.write_parquet(out)
+    console.log(f"  wrote {len(full):,} reference rows")
+    return out
+
+
+def pull_organic_features(
+    chunk_size: int = 100, sample_size: int | None = 10_000
+) -> Path:
+    """For AIO-positive SERPs, pull per-organic-result feature columns.
+
+    Pulls one row per (keyword_result_id, organic_url). Each row carries
+    title+description+breadcrumb text so rows are heavy.
+
+    For a full pull (sample_size=None): ~1.5M rows, ~50 minutes.
+
+    For a sampled pull (default sample_size=30,000 SERPs): ~300K rows,
+    ~10 minutes. Statistically more than enough for cited-vs-uncited
+    feature comparisons. Sampling is random across the entire AIO-positive
+    population.
+    """
+    out = RAW_DIR / "organic_features.parquet"
+    console.log(
+        f"[bold]Pulling organic features[/] -> {out}  "
+        f"(sample_size={sample_size if sample_size else 'FULL'})"
+    )
+
+    # Build a sampled id list once if sampling, else stream by id range.
+    sampled_ids: list[int] | None = None
+    if sample_size is not None:
+        with _connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id FROM keyword_results
+                 WHERE has_ai_overview = 1
+                   AND raw_api_result IS NOT NULL
+                   AND raw_api_result NOT LIKE '%%\\u0000%%'
+                 ORDER BY random()
+                 LIMIT %s
+                """,
+                (sample_size,),
+            )
+            sampled_ids = [r["id"] for r in cur.fetchall()]
+        console.log(f"  sampled {len(sampled_ids):,} SERP ids")
+
+    sql_template = """
+    SELECT
+        id AS keyword_result_id,
+        (item->>'rank_absolute')::int AS rank_absolute,
+        item->>'domain'      AS domain,
+        item->>'url'         AS url,
+        item->>'title'       AS title,
+        item->>'description' AS description,
+        item->>'breadcrumb'  AS breadcrumb,
+        LENGTH(COALESCE(item->>'title', ''))       AS title_length,
+        LENGTH(COALESCE(item->>'description', '')) AS description_length,
+        COALESCE((item->>'is_featured_snippet')::boolean, FALSE) AS is_featured_snippet,
+        (jsonb_typeof(item->'links') = 'array'
+            AND jsonb_array_length(item->'links') > 0)  AS has_sitelinks,
+        (jsonb_typeof(item->'faq')         = 'object')  AS has_faq,
+        (jsonb_typeof(item->'rating')      = 'object')  AS has_rating,
+        -- "price" is sometimes a string, sometimes a number, sometimes null.
+        -- Treat anything other than JSON null/missing as having a price.
+        (item ? 'price' AND jsonb_typeof(item->'price') NOT IN ('null')
+            AND COALESCE(NULLIF(item->>'price', ''), NULL) IS NOT NULL) AS has_price,
+        (jsonb_typeof(item->'highlighted') = 'array'
+            AND jsonb_array_length(item->'highlighted') > 0) AS has_highlighted
+      FROM keyword_results,
+           jsonb_array_elements(raw_api_result::jsonb -> 'items') AS item
+     WHERE has_ai_overview = 1
+       AND raw_api_result IS NOT NULL
+       AND raw_api_result NOT LIKE '%%\\u0000%%'
+       AND item->>'type' = 'organic'
+       AND id = ANY(%s)
+    """
+
+    def _fetch_chunk(ids_chunk: list[int]) -> pl.DataFrame | None:
+        with _connect() as conn, conn.cursor() as cur:
+            cur.execute(sql_template, (ids_chunk,))
+            rows = cur.fetchall()
+        if not rows:
+            return None
+        return pl.DataFrame(rows)
+
+    all_chunks: list[pl.DataFrame] = []
+    pbar = tqdm(desc="organic rows pulled", unit="row")
+
+    if sampled_ids is not None:
+        # Incremental writes: spill every ~50 chunks so partial progress survives
+        # any future stalls. Final pass concats all temp files into one parquet.
+        tmp_dir = RAW_DIR / "_organic_features_tmp"
+        tmp_dir.mkdir(exist_ok=True)
+        # Clean any previous attempt
+        for f in tmp_dir.glob("*.parquet"):
+            f.unlink()
+
+        for i in range(0, len(sampled_ids), chunk_size):
+            ids_chunk = sampled_ids[i : i + chunk_size]
+            try:
+                df = _fetch_chunk(ids_chunk)
+            except psycopg.errors.QueryCanceled:
+                console.log(f"  timeout on chunk {i}; halving and retrying")
+                chunk_size = max(20, chunk_size // 2)
+                df = _fetch_chunk(ids_chunk[:chunk_size])
+            if df is None:
+                continue
+            all_chunks.append(df)
+            pbar.update(len(df))
+            # Spill every 5K rows
+            if sum(c.height for c in all_chunks) >= 5_000:
+                spilled = pl.concat(all_chunks, how="vertical_relaxed")
+                spilled.write_parquet(tmp_dir / f"chunk_{i:08d}.parquet")
+                all_chunks = []
+        if all_chunks:
+            pl.concat(all_chunks, how="vertical_relaxed").write_parquet(
+                tmp_dir / "chunk_final.parquet"
+            )
+            all_chunks = []
+        # Reload all spilled chunks for the final write
+        for f in sorted(tmp_dir.glob("*.parquet")):
+            all_chunks.append(pl.read_parquet(f))
+    else:
+        # Full pull, stream by id ranges
+        sql_full = sql_template.replace(
+            "AND id = ANY(%s)", "AND id > %s ORDER BY id LIMIT %s"
+        )
+        last_id = 0
+        while True:
+            with _connect() as conn, conn.cursor() as cur:
+                try:
+                    cur.execute(sql_full, (last_id, chunk_size))
+                    rows = cur.fetchall()
+                except psycopg.errors.QueryCanceled:
+                    chunk_size = max(200, chunk_size // 2)
+                    continue
+            if not rows:
+                break
+            df = pl.DataFrame(rows)
+            all_chunks.append(df)
+            last_id = int(df["keyword_result_id"].max())
+            pbar.update(len(df))
+            if len(rows) < chunk_size:
+                break
+
+    pbar.close()
+    full = pl.concat(all_chunks, how="vertical_relaxed") if all_chunks else pl.DataFrame()
+    full.write_parquet(out)
+    console.log(f"  wrote {len(full):,} organic-result rows")
+    return out
+
+
 def pull_all() -> None:
     pull_projects()
     pull_meta()
     pull_aio_refs_domains()
     pull_organic_top10()
+    pull_aio_refs_urls()
+    pull_organic_features()
 
 
 if __name__ == "__main__":

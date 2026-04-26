@@ -384,6 +384,91 @@ def finding_7_concentration_by_vertical(min_rows: int = 1000) -> pl.DataFrame:
     return result
 
 
+def finding_9_cited_vs_uncited_features() -> pl.DataFrame | None:
+    """For AIO-positive SERPs: how do cited URLs differ structurally from uncited?
+
+    Reads atlas.f9_cited_vs_uncited_features (already computed by load.py).
+    Section 4 of the planned report. Operationally most useful finding —
+    surfaces SERP-level features that correlate with citation.
+    """
+    from atlas.db import atlas_conn
+
+    try:
+        with atlas_conn() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT feature, cited_value, uncited_value, relative_diff_pct,
+                       n_cited, n_uncited
+                  FROM atlas.f9_cited_vs_uncited_features
+                """
+            )
+            rows = cur.fetchall()
+    except Exception as e:
+        console.log(f"  F9 skipped: {e}")
+        return None
+
+    if not rows:
+        console.log("  F9 has no rows yet — run scripts/run_load.py first")
+        return None
+
+    result = pl.DataFrame(
+        rows,
+        schema={
+            "feature": pl.String,
+            "cited_value": pl.Float64,
+            "uncited_value": pl.Float64,
+            "relative_diff_pct": pl.Float64,
+            "n_cited": pl.Int64,
+            "n_uncited": pl.Int64,
+        },
+        orient="row",
+    )
+
+    # Two charts: structural-flag features (percentages) vs continuous (lengths/rank)
+    pct_features = result.filter(pl.col("feature").str.starts_with("pct_"))
+    continuous_features = result.filter(~pl.col("feature").str.starts_with("pct_"))
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, max(5, max(pct_features.height, continuous_features.height) * 0.6)))
+
+    # Plot 1: structural flags (cited vs uncited %)
+    if pct_features.height:
+        labels = [f.replace("pct_", "").replace("_", " ") for f in pct_features["feature"].to_list()]
+        cited_pct = pct_features["cited_value"].to_list()
+        uncited_pct = pct_features["uncited_value"].to_list()
+        y = list(range(len(labels)))
+        height = 0.4
+        ax1.barh([yy - height / 2 for yy in y], uncited_pct, height=height, label="uncited", color="#cbd5e1", edgecolor="white")
+        ax1.barh([yy + height / 2 for yy in y], cited_pct, height=height, label="cited", color=INDIGO, edgecolor="white")
+        ax1.set_yticks(y)
+        ax1.set_yticklabels(labels)
+        ax1.set_xlabel("% of URLs in this group with feature present")
+        ax1.set_title("Structural features: cited vs uncited", loc="left", weight="bold", fontsize=11)
+        ax1.legend(loc="lower right", frameon=False)
+
+    # Plot 2: continuous features (cited vs uncited values)
+    if continuous_features.height:
+        labels = [f.replace("avg_", "") for f in continuous_features["feature"].to_list()]
+        cited_v = continuous_features["cited_value"].to_list()
+        uncited_v = continuous_features["uncited_value"].to_list()
+        y = list(range(len(labels)))
+        height = 0.4
+        ax2.barh([yy - height / 2 for yy in y], uncited_v, height=height, label="uncited", color="#cbd5e1", edgecolor="white")
+        ax2.barh([yy + height / 2 for yy in y], cited_v, height=height, label="cited", color=INDIGO, edgecolor="white")
+        ax2.set_yticks(y)
+        ax2.set_yticklabels(labels)
+        ax2.set_xlabel("average value")
+        ax2.set_title("Continuous features: cited vs uncited", loc="left", weight="bold", fontsize=11)
+        ax2.legend(loc="lower right", frameon=False)
+
+    fig.suptitle("F9 — what makes a URL get cited in AIO?", weight="bold", fontsize=13)
+    fig.tight_layout()
+    out = CHARTS_DIR / "f9_cited_vs_uncited_features.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
 def finding_8_overlap_by_vertical(min_rows: int = 1000) -> pl.DataFrame:
     """Per-vertical version of F2 (AIO ↔ organic top-10 overlap).
 
@@ -590,6 +675,29 @@ def run_all() -> None:
     for r in f5.iter_rows(named=True):
         t5.add_row(r["vertical"], f"{r['rows']:,}", f"{r['aio_rows']:,}", f"{r['aio_pct']}%")
     console.print(t5)
+
+    console.log("\n[bold]Finding 9 — cited vs uncited URL features[/]")
+    f9 = finding_9_cited_vs_uncited_features()
+    if f9 is not None:
+        t9 = Table(title="F9: feature averages — cited URLs vs uncited URLs (in AIO-positive SERPs)")
+        t9.add_column("feature")
+        t9.add_column("cited", justify="right")
+        t9.add_column("uncited", justify="right")
+        t9.add_column("Δ (rel %)", justify="right")
+        t9.add_column("n cited", justify="right")
+        t9.add_column("n uncited", justify="right")
+        for r in f9.iter_rows(named=True):
+            diff = r["relative_diff_pct"]
+            diff_str = f"{diff:+.1f}%" if diff is not None else "—"
+            t9.add_row(
+                r["feature"],
+                f"{r['cited_value']:.2f}",
+                f"{r['uncited_value']:.2f}",
+                diff_str,
+                f"{r['n_cited']:,}",
+                f"{r['n_uncited']:,}",
+            )
+        console.print(t9)
 
     console.log("\n[bold]Finding 8 — AIO ↔ top-10 overlap by vertical[/]")
     f8 = finding_8_overlap_by_vertical()

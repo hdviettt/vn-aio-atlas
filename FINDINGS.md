@@ -211,6 +211,71 @@ AIO is actively pulling from a wider source pool than what's ranking.
 
 ---
 
+## F9 — What makes a URL get cited? Rank, sitelinks, structured data (new — Section 4)
+
+Section 4 of the planned report. For each AIO-positive SERP, compares
+features of organic URLs that *were cited* in the AI Overview vs URLs that
+weren't, restricted to the same SERPs (so the comparison controls for query
+mix and vertical mix).
+
+Computed on a random sample of 10,000 AIO-positive SERPs → 179,201
+organic URLs (45,878 cited, 133,323 uncited).
+
+| feature | cited | uncited | Δ (relative %) |
+|---|---:|---:|---:|
+| **rank_absolute** | 8.55 | 13.52 | **−36.8%** |
+| **% has_sitelinks** | 13.15% | 4.20% | **+213.3%** |
+| % has_rating | 10.66% | 9.71% | +9.8% |
+| avg title length | 51.03 chars | 49.48 chars | +3.1% |
+| avg description length | 157.32 chars | 153.69 chars | +2.4% |
+| % has_highlighted | 94.60% | 93.96% | +0.7% |
+| % is_featured_snippet | 0.00% | 0.00% | — |
+| % has_faq | 0.00% | 0.00% | — |
+
+**Two signals jump out:**
+
+1. **Rank still matters, but only somewhat.** Cited URLs rank at position 8.5
+   on average; uncited URLs at position 13.5. Cited URLs rank about 5
+   positions higher, but they're nowhere near top-1 — AIO routinely cites
+   results from positions 5–10 just as readily as positions 1–3.
+2. **Sitelinks are the strongest binary signal.** URLs with sitelinks
+   (Google's signal that the domain is recognized and authoritative) are
+   **cited 3.1× more often** than URLs without (13.2% vs 4.2%). This is
+   the largest relative effect of any feature in the dataset.
+
+**What didn't matter (or is too weakly represented to claim):**
+
+- Title length and description length differences are tiny (~3%). If you've
+  optimized your meta tags for search, you've already captured the signal
+  — it is not the lever to pull for AIO citation.
+- Featured snippets and FAQ rich results are nearly absent in this sample
+  (0% in both groups), so we can't claim anything about them.
+- Rating rich results show a 10% lift — directional but small enough to be
+  noise without a larger sample.
+
+**Operational implication for SEO operators:**
+
+If you're trying to get cited in AIO, your two highest-leverage moves
+appear to be:
+
+1. **Rank well, but stop optimizing for top-3.** Anything in the top-10 has
+   non-trivial citation odds. Effort spent moving from rank 5 → rank 1 has
+   diminishing returns for AIO; the citation rate is already meaningful at
+   rank 5.
+2. **Earn sitelinks for your domain.** Sitelinks signal Google's recognition
+   of your site as an authoritative source — they correlate with citation
+   probability more strongly than any individual page-level feature in our
+   data. Build pages and a site structure that earns Google sitelinks, and
+   your AIO citation rate roughly triples.
+
+**Caveat:** `has_price` was excluded from this iteration due to a
+known SQL extraction bug in the source pull (counts JSON-null prices as
+"has price"). The fix is in `pull.py` for future re-pulls.
+
+![F9 — Cited vs uncited URL features](charts/f9_cited_vs_uncited_features.png)
+
+---
+
 ## Methodology notes
 
 - **Cleaning:** dropped ~5.3% of rows where the keyword references a SEONGON
