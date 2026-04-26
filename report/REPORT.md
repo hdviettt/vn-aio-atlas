@@ -421,17 +421,147 @@ Three patterns emerge across verticals:
 
 ## Section 6 — Operational Implications for SEO Operators
 
-*(To be written. Drawing on Sections 1–4, this section will distill the data into a prioritized list of operator moves: what to do today, what to deprioritize, and what to monitor.)*
+This section translates the data into specific, prioritized moves for SEO operators. It is structured as a playbook: what to start, what to stop, what to measure. The recommendations are calibrated by vertical (Section 5) — operators should treat the priorities below as defaults to apply unless their vertical's specific context overrides.
 
-Preliminary outline:
+### 6.1 — The four moves with the largest expected impact
 
-1. **Stop optimizing for short-tail AIO escape**. The 1–2 word queries with 33% AIO rate are the lowest-AIO-pressure portion of the funnel. Long-tail queries (where 76–81% of queries trigger AIO) is where the displacement risk is highest, but also where the citation opportunity is largest.
+These four are the highest-leverage actions across most verticals. They are listed in priority order:
 
-2. **Earn sitelinks before you optimize meta tags**. Sitelinks correlate with AIO citation 3× more strongly than any individual page-level feature.
+#### Move 1: Build the site structure that earns sitelinks
 
-3. **Calibrate to your vertical's concentration profile**. Construction or software brands face a long-tail market — the path to AIO visibility is content breadth and topical authority, not chasing a few dominant terms. Healthcare or banking brands face a concentrated market — defending share against incumbents matters more than entry.
+**Why.** Per F9, sitelinks are the single largest binary signal of AIO citation in the dataset (URLs with sitelinks are cited 3.1× more often than URLs without — 13.2% vs 4.2%). This is a structural, multi-month investment, not a tactical change. But it has the largest expected effect of any single intervention.
 
-4. **Drop UGC content as a primary AIO play**. The Facebook/YouTube citation density (1.6–1.9) suggests AIO does not value UGC sources at the same rate as specialist domains. UGC continues to play a role in organic SERP and brand signal, but is structurally devalued in AIO citation.
+**How.** Sitelinks are awarded by Google based on:
+
+- **Clear navigational hierarchy** — the site has a recognizable primary navigation that reflects the actual content structure.
+- **Descriptive, brand-anchored navigation labels** — categories named in ways users actually search for (not internal jargon).
+- **Brand-anchored search behavior** — users searching "[brand name] [product]" rather than just "[product]" — which Google interprets as the brand being a recognized destination for that query family.
+- **Internal linking that reflects user navigation** — high in-link counts to key pages from menu structures and contextual links.
+
+**What to measure.** Track sitelinks via Google Search Console (Performance report → page-level CTR + impressions). Sites that earn sitelinks see step-changes in branded-query CTR and AIO citation rate simultaneously.
+
+#### Move 2: Calibrate content depth to vertical concentration
+
+**Why.** Per F7, citation concentration ranges from 12.8% (construction) to 48.7% (jewelry). The right content strategy is fundamentally different across this range. In concentrated markets (banking, healthcare, jewelry), the defenders own most of the citation share — the path forward is depth on a specific positioning. In fragmented markets (construction, software, education), no one owns the share — the path forward is breadth across many sub-queries.
+
+**How.**
+
+- **In concentrated markets (top-10 ≥ 35%):** Pick a defensible positioning (a specific product line, customer segment, or content angle) and build depth on it. A narrow, deep, expert position beats a wide, shallow generalist position.
+- **In fragmented markets (top-10 < 25%):** Build breadth across categories. A 50-page comprehensive guide that covers ten sub-categories will out-perform a 5-page focused site, because no single page is going to dominate.
+- **In moderate markets (top-10 25–35%):** Hybrid. A core-depth strategy (3–5 hero positionings) with breadth in supporting topics.
+
+**What to measure.** Per-query citation rate broken down by your site's positioning. If your site shows up in 30 distinct query SERPs but only gets cited in 2, your positioning isn't earning citation — back to the drawing board on depth.
+
+#### Move 3: Long-tail content over head-term content
+
+**Why.** Per F1, 1–2 word queries trigger AIO 32.8% of the time; 10+ word queries trigger AIO 80.8% of the time. Two operational implications:
+
+1. The displacement risk to organic CTR from AIO is **highest** on long-tail queries.
+2. The citation opportunity from AIO is **largest** on long-tail queries.
+
+These two facts together mean: **the long tail is where AIO visibility actually matters**. Head-term traffic is meaningfully less affected by AIO; long-tail traffic is being reshaped.
+
+**How.**
+
+- Move resource allocation from "rank #1 for high-volume head terms" to "rank top-10 for hundreds of long-tail queries within your topic area."
+- Build content that answers specific informational long-tail intents — "how to X for Y" rather than "best X" or "X reviews."
+- Use existing keyword research tools (Ahrefs, Semrush, Google Search Console) to find long-tail queries your site already ranks for at positions 5–15. These are the queries where citation share is most achievable.
+
+**What to measure.** Long-tail click-through rate against AIO appearance. If you appear at rank 8 for a long-tail query and AIO is also present, your CTR will likely be lower than for a query without AIO — but a citation in the AIO might offset that loss with brand signal.
+
+#### Move 4: Drop UGC channels as a primary AIO play
+
+**Why.** Per F3, Facebook (citation density 1.87) and YouTube (1.65) are present in many SERPs but are cited shallowly. AIO appears to systematically prefer specialist domains over general UGC.
+
+**How.**
+
+- Don't invest brand budget in YouTube/Facebook content with the primary goal of earning AIO citation share. The math doesn't favor it.
+- UGC channels still play roles in (a) audience-building, (b) brand-signal reinforcement (so when AIO does cite a specialist source, the brand is recognized), and (c) social-search discovery on platforms that aren't Google. Continue investing in UGC for these reasons, just not for AIO citation.
+- The exception: long-tail markets (construction, software, tourism) where YouTube cracks the top-5. Even here, YouTube isn't a primary citation channel — it's a sub-priority that benefits from being well-tagged with descriptions, transcripts, and structured metadata.
+
+**What to measure.** Compare the citation rate (citations per query in your tracked set) for your owned domains vs your YouTube/Facebook content. The differential is informative — and almost always favors your owned domains.
+
+### 6.2 — The two moves you might be over-investing in
+
+These are common SEO investments that, on this dataset, return less than the four moves above:
+
+#### Anti-priority 1: Aggressive top-3 ranking optimization
+
+**Why.** Per F9, cited URLs rank at position 8.5 on average; uncited URLs at position 13.5. The marginal CTR boost from ranking 1 vs 5 is real for organic traffic, but the AIO citation reward is roughly the same across positions 1–10. If your goal is AIO citation share, the resource investment to move from position 5 to position 1 is better spent on Move 1 (sitelinks) or Move 2 (vertical-calibrated depth).
+
+**Caveat.** This is *not* an argument against ranking well. It's an argument against the marginal investment in moving from already-ranking-well to ranking #1, when that investment competes for resources with structural moves that have larger AIO impact.
+
+#### Anti-priority 2: Meta-title and meta-description fine-tuning for AIO
+
+**Why.** Per F9, average title length differs by 3.1% between cited and uncited URLs (51 vs 49.5 chars). Average description length differs by 2.4% (157 vs 154 chars). These are not signals AIO is using to decide what to cite.
+
+**Caveat.** Meta tags still matter for organic CTR (the snippet shown below the URL in regular search). Continue maintaining them at a reasonable quality. Just don't expect AIO citation gains from rewriting them.
+
+### 6.3 — Per-vertical priority mix
+
+Different verticals reward different moves. Below is the recommended priority weighting by vertical, from Section 5:
+
+| Vertical | Sitelinks (Move 1) | Vertical-calibrated depth (Move 2) | Long-tail (Move 3) | UGC drop (Move 4) |
+|---|---|---|---|---|
+| Banking | **Critical** | Important | Important | Important |
+| Healthcare | Critical | **Critical** | Critical | Important |
+| Construction | Important | **Critical (breadth)** | Important | Less critical |
+| Education | Important | **Critical** | **Critical** | Less critical |
+| Tourism | Important | Important | **Critical** | Less critical |
+| FMCG | Important | Important | Important | **Critical** |
+| Logistics | **Critical** | Important | Important | Important |
+| Retail | **Critical** | Important | Less critical | Important |
+| Fintech | **Critical** | Important | Important | Important |
+| Software | Less critical | **Critical (breadth)** | **Critical** | Less critical |
+| Lifestyle | Important | Important | **Critical** | Important |
+| Jewelry | Important | **Critical** | **Critical** | Important |
+
+### 6.4 — Measurement framework
+
+If you're going to make AIO-related investments, measure them. The following is a minimum measurement framework:
+
+1. **Track AIO appearance rate per tracked query.** Run a SERP-tracking tool (DataForSEO, BrightLocal, custom scrapers) regularly enough to capture which queries return AIO and which don't.
+2. **Track citation share for your domain.** For AIO-positive queries in your tracking set, what percentage cite your domain? Compare to top competitors.
+3. **Track sitelinks status for your top pages.** Google Search Console → Performance → page-level. Pages that have sitelinks (visible as additional links below the main result) should be flagged distinctly.
+4. **Track citation density.** Citations / distinct cited queries. A density above 3 means your domain is being cited multiple times for the same query — a sign of deep authority. A density near 1 means breadth without depth.
+5. **Track AIO appearance rate by query length.** Are you over-investing in head-term optimization where AIO presence is lower?
+6. **Track top-10 overlap for your vertical.** Healthcare's 67% overlap means rank-driven AIO; tourism's 47% means content-driven AIO. Knowing your vertical's number tells you how much of your investment should go into ranking vs structural authority.
+
+### 6.5 — A 90-day operator checklist
+
+For a marketing or SEO leader at a mid-market Vietnamese brand, here's a concrete 90-day plan to start moving on AIO:
+
+**Days 1–14 (Audit):**
+- Run a SERP-tracking pull for 200 queries representative of your tracked set.
+- Identify which queries return AIO (your AIO-positive set) and which don't.
+- For each AIO-positive query, identify which domains AIO cited (top 10 cited per vertical).
+- Identify your current site's citation rate and the top 3 competitors' rates.
+
+**Days 15–30 (Diagnose):**
+- For your top 3 competitors with high citation share, examine their site structure for sitelinks, depth, and content topology.
+- For each citation-gap query (where you rank but aren't cited), identify the cited URL's structural features (length, sitelinks, structured data, breadcrumb depth).
+- Establish baseline metrics: sitelinks count, citation rate, citation density.
+
+**Days 31–60 (Build):**
+- If sitelinks are missing on key pages: rework site navigation hierarchy and internal linking to make navigation visible to Google.
+- If your vertical is fragmented (construction, software, education, tourism): start a breadth-content sprint targeting 30+ long-tail queries in your subfield.
+- If your vertical is concentrated (banking, healthcare, jewelry): pick a single core positioning and build depth content around it (8–12 substantive pieces).
+- Deploy structured data appropriate to your vertical (FinancialProduct, MedicalCondition, Trip, Product, etc.).
+
+**Days 61–90 (Iterate):**
+- Re-run SERP tracking on the same 200 queries. Compare citation rate, sitelinks status, AIO appearance rate to baseline.
+- Identify which moves moved the needle and double down. Identify which didn't and reallocate.
+- Decide: is your domain on a citation-share growth trajectory (citation rate +20% over baseline), neutral, or declining? If declining, escalate to executive review — this is a strategic, not tactical, problem.
+
+### 6.6 — What not to do
+
+A short list of tempting but data-uninformed moves to avoid:
+
+- **Don't write generic "AIO optimization" content.** AIO doesn't reward content explicitly written for AIO; it rewards content that's authoritative, well-structured, and discoverable. The framing that matters is "I'm writing for the user" not "I'm writing for AIO."
+- **Don't pay for AIO citation services.** Several agencies in Vietnam are now selling "AIO ranking optimization" packages. The data does not support specific page-level interventions that consistently move citation rate. Move 1 (sitelinks) is structural, multi-month work that no shortcut substitutes for.
+- **Don't conclude AIO is killing your traffic and stop investing in SEO.** SEO continues to work. AIO changes which content gets traffic, but well-ranked, well-cited content still wins. The right response is to invest in citation-quality content, not to disinvest from organic.
+- **Don't stop using the SERP-tracking infrastructure your agency already runs.** Even imperfect SERP data is more useful than no data — and the data quality only improves as more periodic snapshots accumulate.
+- **Don't expect overnight results.** The structural moves recommended here (sitelinks, depth, long-tail breadth) compound over months. A 90-day cycle is the minimum useful evaluation horizon.
 
 ---
 
