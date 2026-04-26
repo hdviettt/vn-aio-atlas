@@ -96,6 +96,15 @@ export type F9Row = {
   n_uncited: number;
 };
 
+export type F10Row = {
+  vertical: string;
+  aio_rows: number;
+  avg_md_chars: number;
+  p50_md_chars: number;
+  p90_md_chars: number;
+  avg_refs_per_aio: number;
+};
+
 export async function getVerticals(): Promise<string[]> {
   const rows = await query<{ vertical: string }>(
     `SELECT vertical
@@ -264,4 +273,11 @@ export const f9 = () =>
     `SELECT feature, cited_value, uncited_value, relative_diff_pct,
             n_cited, n_uncited
        FROM atlas.f9_cited_vs_uncited_features`,
+  );
+
+export const f10 = () =>
+  query<F10Row>(
+    `SELECT vertical, aio_rows, avg_md_chars, p50_md_chars, p90_md_chars, avg_refs_per_aio
+       FROM atlas.f10_aio_characteristics_by_vertical
+      ORDER BY avg_md_chars DESC`,
   );

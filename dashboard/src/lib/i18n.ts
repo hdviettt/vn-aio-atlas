@@ -163,6 +163,25 @@ export const t: Strings = {
     vi: "% trích AIO cũng nằm trong top-10 organic",
   },
 
+  // F10
+  f10_eyebrow: { en: "finding 10", vi: "phát hiện 10" },
+  f10_title: {
+    en: "Healthcare AIOs are 67% longer than jewelry AIOs",
+    vi: "AIO y tế dài hơn AIO trang sức 67%",
+  },
+  f10_takeaway: {
+    en: "Average AIO length and reference count vary substantially by vertical. Healthcare answers are longest (5,520 chars, 10.1 refs on average) and richest in citations — consistent with the E-E-A-T conservatism Google applies to YMYL queries. Jewelry answers are shortest (3,292 chars, 7.1 refs), reflecting more focused commercial-intent queries.",
+    vi: "Độ dài AIO trung bình và số lượng trích nguồn thay đổi đáng kể theo ngành. Câu trả lời y tế dài nhất (trung bình 5.520 ký tự, 10,1 trích nguồn) và giàu trích dẫn nhất — phù hợp với sự bảo thủ E-E-A-T mà Google áp dụng cho truy vấn YMYL. Câu trả lời trang sức ngắn nhất (3.292 ký tự, 7,1 trích nguồn), phản ánh truy vấn ý định thương mại tập trung hơn.",
+  },
+  f10_x_label_chars: {
+    en: "average AIO answer length (chars)",
+    vi: "độ dài trung bình câu trả lời AIO (ký tự)",
+  },
+  f10_x_label_refs: {
+    en: "average references per AIO",
+    vi: "số trích nguồn trung bình mỗi AIO",
+  },
+
   // F9
   f9_eyebrow: { en: "finding 9", vi: "phát hiện 9" },
   f9_title: {
@@ -188,6 +207,16 @@ export const t: Strings = {
   vertical_banner_clear: {
     en: "← back to all verticals",
     vi: "← quay lại tất cả ngành",
+  },
+
+  // CTA / report link
+  read_full_report: {
+    en: "Read the full report",
+    vi: "Đọc báo cáo đầy đủ",
+  },
+  read_findings_doc: {
+    en: "Read the findings doc",
+    vi: "Đọc tài liệu kết quả",
   },
 
   // Footer

@@ -635,6 +635,42 @@ def compute_findings(conn: Connection) -> None:
             """
         )
 
+        # F10 — AIO answer characteristics by vertical
+        cur.execute("TRUNCATE atlas.f10_aio_characteristics_by_vertical")
+        cur.execute(
+            """
+            WITH ref_counts AS (
+                SELECT keyword_result_id, COUNT(*) AS n_refs
+                  FROM atlas.aio_references
+                 GROUP BY keyword_result_id
+            ),
+            big_verticals AS (
+                SELECT vertical
+                  FROM atlas.keyword_results
+                 WHERE vertical <> 'unknown'
+                 GROUP BY vertical
+                HAVING COUNT(*) >= 1000
+            )
+            INSERT INTO atlas.f10_aio_characteristics_by_vertical
+                  (vertical, aio_rows, avg_md_chars, p50_md_chars, p90_md_chars,
+                   avg_refs_per_aio)
+            SELECT
+                k.vertical,
+                COUNT(*)::int                                    AS aio_rows,
+                ROUND(AVG(k.aio_md_len))::int                    AS avg_md_chars,
+                PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY k.aio_md_len)::int AS p50_md_chars,
+                PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY k.aio_md_len)::int AS p90_md_chars,
+                ROUND(AVG(COALESCE(rc.n_refs, 0))::numeric, 2)   AS avg_refs_per_aio
+              FROM atlas.keyword_results k
+              LEFT JOIN ref_counts rc ON rc.keyword_result_id = k.id
+             WHERE k.has_ai_overview
+               AND k.aio_md_len > 0
+               AND k.vertical IN (SELECT vertical FROM big_verticals)
+             GROUP BY k.vertical
+             ORDER BY avg_md_chars DESC
+            """
+        )
+
         # Run metadata
         cur.execute(
             """
@@ -647,7 +683,7 @@ def compute_findings(conn: Connection) -> None:
             (datetime.utcnow(),),
         )
 
-    console.log("  findings tables populated (F1-F9)")
+    console.log("  findings tables populated (F1-F10)")
 
 
 def run_load() -> None:

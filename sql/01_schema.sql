@@ -181,6 +181,18 @@ CREATE TABLE atlas.f9_cited_vs_uncited_features (
     PRIMARY KEY (feature)
 );
 
+-- F10 — AIO answer characteristics by vertical: how long are AIO answers?
+-- How many references do they cite? Reveals "rich" verticals (long, multi-
+-- source) vs "concise" verticals (short, focused).
+CREATE TABLE atlas.f10_aio_characteristics_by_vertical (
+    vertical          text PRIMARY KEY,
+    aio_rows          integer NOT NULL,
+    avg_md_chars      integer NOT NULL,
+    p50_md_chars      integer NOT NULL,
+    p90_md_chars      integer NOT NULL,
+    avg_refs_per_aio  numeric(6,2) NOT NULL
+);
+
 -- ─── Run metadata ────────────────────────────────────────────────────
 
 CREATE TABLE atlas.load_runs (

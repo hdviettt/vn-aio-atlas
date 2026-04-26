@@ -8,6 +8,7 @@ import {
   f7,
   f8,
   f9,
+  f10,
   getCorpusSummary,
   getVerticals,
 } from "@/lib/db";
@@ -91,6 +92,7 @@ export default async function Home({
     f7Data,
     f8Data,
     f9Data,
+    f10Data,
   ] = await Promise.all([
     getCorpusSummary(),
     f1(vertical),
@@ -102,6 +104,7 @@ export default async function Home({
     f7(),
     f8(),
     f9(),
+    f10(),
   ]);
 
   const f2Map = new Map(f2Data.map((r) => [r.metric, Number(r.value)]));
@@ -150,6 +153,29 @@ export default async function Home({
               </a>
             </div>
           )}
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a
+              href={
+                lang === "vi"
+                  ? "https://github.com/hdviettt/vn-aio-atlas/blob/main/report/REPORT_vi.md"
+                  : "https://github.com/hdviettt/vn-aio-atlas/blob/main/report/REPORT.md"
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-indigo-600 text-white text-sm font-semibold px-4 py-2 hover:bg-indigo-700 transition-colors"
+            >
+              {tx(lang, "read_full_report")} →
+            </a>
+            <a
+              href="https://github.com/hdviettt/vn-aio-atlas/blob/main/FINDINGS.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 border border-slate-300 text-slate-900 text-sm font-semibold px-4 py-2 hover:border-slate-400 hover:bg-slate-50 transition-colors"
+            >
+              {tx(lang, "read_findings_doc")} →
+            </a>
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 mt-12">
             <Stat label={tx(lang, "stat_rows")} value={fmtNum(summary.total_rows)} />
@@ -411,6 +437,43 @@ export default async function Home({
             })}
           </div>
           <p className="text-xs text-slate-500 mt-4">{tx(lang, "f9_caption")}</p>
+        </Section>
+
+        {/* F10 */}
+        <Section
+          id="f10"
+          eyebrow={tx(lang, "f10_eyebrow")}
+          title={tx(lang, "f10_title")}
+          takeaway={tx(lang, "f10_takeaway")}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 mb-2">
+                {tx(lang, "f10_x_label_chars")}
+              </div>
+              <BarChartH
+                data={f10Data.map((r) => ({
+                  label: r.vertical,
+                  value: Number(r.avg_md_chars),
+                }))}
+                height={420}
+                format="num"
+              />
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 mb-2">
+                {tx(lang, "f10_x_label_refs")}
+              </div>
+              <BarChartH
+                data={f10Data.map((r) => ({
+                  label: r.vertical,
+                  value: Number(r.avg_refs_per_aio),
+                }))}
+                height={420}
+                format="raw"
+              />
+            </div>
+          </div>
         </Section>
 
         {/* Footer */}

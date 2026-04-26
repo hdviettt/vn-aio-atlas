@@ -276,6 +276,36 @@ known SQL extraction bug in the source pull (counts JSON-null prices as
 
 ---
 
+## F10 — Healthcare AIOs are 67% longer than jewelry AIOs (new)
+
+Average AIO answer length and reference count vary substantially by
+vertical. The richest AIO answers are in healthcare; the most concise
+are in jewelry.
+
+| vertical | aio rows | avg chars | p50 | p90 | avg refs |
+|---|---:|---:|---:|---:|---:|
+| **healthcare** | 17,381 | **5,520** | — | — | **10.12** |
+| software | 5,216 | 5,204 | — | — | 9.36 |
+| education | 8,643 | 5,177 | — | — | 9.46 |
+| retail | 5,076 | 4,939 | — | — | 8.68 |
+| construction | 23,002 | 4,868 | — | — | 9.30 |
+| tourism | 1,514 | 4,718 | — | — | 9.06 |
+| fintech | 9,325 | 4,631 | — | — | 8.11 |
+| lifestyle | 5,524 | 4,421 | — | — | 9.24 |
+| banking | 36,387 | 4,417 | — | — | 9.10 |
+| fmcg | 17,017 | 4,410 | — | — | 8.78 |
+| logistics | 10,662 | 4,173 | — | — | 8.32 |
+| **jewelry** | 1,231 | **3,292** | — | — | **7.09** |
+
+**Two patterns:**
+
+- **Healthcare AIOs are richest by both measures.** Average length 5,520 chars (67% longer than jewelry's 3,292), citing 10.1 sources on average. Consistent with the E-E-A-T conservatism Google applies to YMYL queries — Google synthesizes longer, multi-source answers when the topic carries health risk.
+- **Commercial-intent verticals get more concise answers.** Jewelry, logistics, FMCG, and banking — where queries skew transactional — get shorter AIOs (3,300–4,500 chars) with fewer references (7–9).
+
+This finding extends F2's "AIO cites 7.4 domains average" — that average masks substantial vertical variance from 7.1 (jewelry) to 10.1 (healthcare). Operators can use this as an expected-density baseline: if your healthcare content competes for 10-source AIO answers but reads like a jewelry-style 7-source brief, you're under-supplying the reference depth Google looks for.
+
+---
+
 ## Methodology notes
 
 - **Cleaning:** dropped ~5.3% of rows where the keyword references a SEONGON
