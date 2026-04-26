@@ -349,6 +349,54 @@ def compute_findings(conn: Connection) -> None:
             """
         )
 
+        # F7 — citation concentration per vertical
+        cur.execute("TRUNCATE atlas.f7_concentration_by_vertical")
+        cur.execute(
+            """
+            WITH per_v_d AS (
+                SELECT k.vertical,
+                       a.domain,
+                       COUNT(*) AS citations
+                FROM atlas.aio_citations a
+                JOIN atlas.keyword_results k ON k.id = a.keyword_result_id
+                WHERE k.vertical <> 'unknown'
+                GROUP BY k.vertical, a.domain
+            ),
+            ranked AS (
+                SELECT vertical, domain, citations,
+                       RANK() OVER (PARTITION BY vertical ORDER BY citations DESC) AS r,
+                       SUM(citations) OVER (PARTITION BY vertical) AS total_citations
+                FROM per_v_d
+            ),
+            big_verticals AS (
+                SELECT vertical
+                FROM atlas.keyword_results
+                WHERE vertical <> 'unknown'
+                GROUP BY vertical
+                HAVING COUNT(*) >= 1000
+            )
+            INSERT INTO atlas.f7_concentration_by_vertical
+                  (vertical, total_citations, distinct_domains,
+                   top1_domain, top1_share, top3_share, top5_share, top10_share)
+            SELECT
+                vertical,
+                MAX(total_citations) AS total_citations,
+                COUNT(DISTINCT domain) AS distinct_domains,
+                MAX(CASE WHEN r = 1 THEN domain END) AS top1_domain,
+                ROUND(100.0 * SUM(CASE WHEN r =  1 THEN citations ELSE 0 END)
+                              / NULLIF(MAX(total_citations), 0), 2) AS top1_share,
+                ROUND(100.0 * SUM(CASE WHEN r <= 3 THEN citations ELSE 0 END)
+                              / NULLIF(MAX(total_citations), 0), 2) AS top3_share,
+                ROUND(100.0 * SUM(CASE WHEN r <= 5 THEN citations ELSE 0 END)
+                              / NULLIF(MAX(total_citations), 0), 2) AS top5_share,
+                ROUND(100.0 * SUM(CASE WHEN r <= 10 THEN citations ELSE 0 END)
+                               / NULLIF(MAX(total_citations), 0), 2) AS top10_share
+            FROM ranked
+            WHERE vertical IN (SELECT vertical FROM big_verticals)
+            GROUP BY vertical
+            """
+        )
+
         # Run metadata
         cur.execute(
             """
@@ -361,7 +409,7 @@ def compute_findings(conn: Connection) -> None:
             (datetime.utcnow(),),
         )
 
-    console.log("  findings tables populated (F1-F6)")
+    console.log("  findings tables populated (F1-F7)")
 
 
 def run_load() -> None:

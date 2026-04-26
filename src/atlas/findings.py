@@ -278,6 +278,112 @@ def finding_6_top_cited_by_vertical(top_k: int = 10) -> pl.DataFrame:
     return top_per_vertical
 
 
+def finding_7_concentration_by_vertical(min_rows: int = 1000) -> pl.DataFrame:
+    """Citation concentration per vertical.
+
+    For each vertical, what share of total citations goes to the top-1,
+    top-3, top-5, top-10 domains? Higher concentration = winner-take-all
+    market. Lower concentration = long-tail diversity.
+
+    Excludes the residual `unknown` bucket and any vertical with fewer
+    than `min_rows` (default 1000) underlying SERPs.
+    """
+    refs = pl.read_parquet(RAW_DIR / "aio_refs_domains.parquet")
+    meta = _load_meta()
+
+    # Big verticals only
+    big = (
+        meta.group_by("vertical").agg(pl.len().alias("rows")).filter(pl.col("rows") >= min_rows)
+    )["vertical"].to_list()
+    big = [v for v in big if v != "unknown"]
+
+    joined = refs.join(meta.select("id", "vertical"), on="id", how="inner").filter(
+        pl.col("vertical").is_in(big)
+    )
+    exploded = (
+        joined.explode("cited_domains")
+        .rename({"cited_domains": "domain"})
+        .filter(pl.col("domain").is_not_null())
+    )
+
+    # Per (vertical, domain) citation counts
+    per = exploded.group_by("vertical", "domain").agg(pl.len().alias("citations"))
+
+    # Compute concentration metrics per vertical
+    out_rows: list[dict] = []
+    for vertical in sorted(big):
+        sub = per.filter(pl.col("vertical") == vertical).sort("citations", descending=True)
+        total = int(sub["citations"].sum())
+        if total == 0:
+            continue
+        top1 = int(sub["citations"][0]) if sub.height >= 1 else 0
+        top3 = int(sub["citations"].head(3).sum())
+        top5 = int(sub["citations"].head(5).sum())
+        top10 = int(sub["citations"].head(10).sum())
+        top1_domain = sub["domain"][0] if sub.height >= 1 else None
+        out_rows.append(
+            {
+                "vertical": vertical,
+                "total_citations": total,
+                "distinct_domains": sub.height,
+                "top1_domain": top1_domain,
+                "top1_share": round(100 * top1 / total, 1),
+                "top3_share": round(100 * top3 / total, 1),
+                "top5_share": round(100 * top5 / total, 1),
+                "top10_share": round(100 * top10 / total, 1),
+            }
+        )
+    result = pl.DataFrame(out_rows).sort("top5_share", descending=True)
+
+    # Chart: stacked horizontal bars showing top-1 / top-3 minus top-1 / etc.
+    fig, ax = plt.subplots(figsize=(11, max(5, result.height * 0.5)))
+    verticals = result["vertical"].to_list()[::-1]
+    top1 = result["top1_share"].to_list()[::-1]
+    top3 = result["top3_share"].to_list()[::-1]
+    top5 = result["top5_share"].to_list()[::-1]
+    top10 = result["top10_share"].to_list()[::-1]
+
+    # Layered bars: rest -> top10 -> top5 -> top3 -> top1
+    rest = [100 - t for t in top10]
+    seg_top10_minus_top5 = [t - s for t, s in zip(top10, top5, strict=True)]
+    seg_top5_minus_top3 = [s - t for s, t in zip(top5, top3, strict=True)]
+    seg_top3_minus_top1 = [t - o for t, o in zip(top3, top1, strict=True)]
+
+    palette = ["#1e1b4b", "#3730a3", INDIGO, "#a5b4fc", "#e0e7ff"]
+    ax.barh(verticals, top1, color=palette[0], label="top 1 domain")
+    ax.barh(verticals, seg_top3_minus_top1, left=top1, color=palette[1], label="top 2-3")
+    ax.barh(
+        verticals,
+        seg_top5_minus_top3,
+        left=top3,
+        color=palette[2],
+        label="top 4-5",
+    )
+    ax.barh(
+        verticals,
+        seg_top10_minus_top5,
+        left=top5,
+        color=palette[3],
+        label="top 6-10",
+    )
+    ax.barh(verticals, rest, left=top10, color=palette[4], label="rest of long tail")
+    ax.set_xlim(0, 100)
+    ax.set_xlabel("share of AIO citations within the vertical (%)")
+    ax.set_title(
+        "Citation concentration by vertical\n"
+        "(how much of all AIO citations go to the top N domains?)",
+        loc="left",
+        weight="bold",
+        fontsize=11,
+    )
+    ax.legend(loc="lower right", frameon=False, ncol=2, fontsize=9)
+    out = CHARTS_DIR / "f7_concentration_by_vertical.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
 def finding_5_aio_rate_by_vertical(meta: pl.DataFrame) -> pl.DataFrame:
     """AIO appearance rate by vertical — reveals which verticals AIO dominates."""
     result = (
@@ -407,6 +513,28 @@ def run_all() -> None:
     for r in f5.iter_rows(named=True):
         t5.add_row(r["vertical"], f"{r['rows']:,}", f"{r['aio_rows']:,}", f"{r['aio_pct']}%")
     console.print(t5)
+
+    console.log("\n[bold]Finding 7 — citation concentration by vertical[/]")
+    f7 = finding_7_concentration_by_vertical()
+    t7 = Table(title="F7: Citation concentration (% of all citations within vertical)")
+    t7.add_column("vertical")
+    t7.add_column("top-1 domain")
+    t7.add_column("top-1 %", justify="right")
+    t7.add_column("top-3 %", justify="right")
+    t7.add_column("top-5 %", justify="right")
+    t7.add_column("top-10 %", justify="right")
+    t7.add_column("# domains", justify="right")
+    for r in f7.iter_rows(named=True):
+        t7.add_row(
+            r["vertical"],
+            r["top1_domain"] or "",
+            f"{r['top1_share']}%",
+            f"{r['top3_share']}%",
+            f"{r['top5_share']}%",
+            f"{r['top10_share']}%",
+            f"{r['distinct_domains']:,}",
+        )
+    console.print(t7)
 
     console.log("\n[bold]Finding 6 — top cited domains by vertical[/]")
     f6 = finding_6_top_cited_by_vertical(top_k=10)

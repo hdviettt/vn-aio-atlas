@@ -110,6 +110,18 @@ CREATE TABLE atlas.f6_top_cited_by_vertical (
 );
 CREATE INDEX idx_f6_vertical ON atlas.f6_top_cited_by_vertical (vertical, rank_in_vertical);
 
+-- F7 — Citation concentration per vertical
+CREATE TABLE atlas.f7_concentration_by_vertical (
+    vertical          text PRIMARY KEY,
+    total_citations   integer NOT NULL,
+    distinct_domains  integer NOT NULL,
+    top1_domain       text,
+    top1_share        numeric(5,2) NOT NULL,
+    top3_share        numeric(5,2) NOT NULL,
+    top5_share        numeric(5,2) NOT NULL,
+    top10_share       numeric(5,2) NOT NULL
+);
+
 -- ─── Run metadata ────────────────────────────────────────────────────
 
 CREATE TABLE atlas.load_runs (

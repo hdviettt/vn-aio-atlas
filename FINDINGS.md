@@ -134,6 +134,44 @@ Highlights:
 
 ---
 
+## F7 — Citation concentration varies dramatically by vertical (new)
+
+For each vertical, what share of total AIO citations goes to the top 1, top
+3, top 5, and top 10 domains? Higher concentration = winner-take-all market.
+Lower concentration = long-tail diversity.
+
+| vertical | top-1 domain | top-1 % | top-5 % | top-10 % | distinct domains |
+|---|---|---:|---:|---:|---:|
+| jewelry | goonus.io | 10.6% | 32.5% | **48.7%** | 278 |
+| healthcare | nhathuoclongchau.com.vn | 9.0% | 33.4% | **45.6%** | 2,658 |
+| banking | techcombank.com | 8.6% | 25.4% | 40.5% | 3,420 |
+| tourism | phiphibrazuca.com | 7.4% | 26.8% | 39.0% | 687 |
+| fmcg | www.avakids.com | 6.7% | 22.7% | 31.6% | 2,877 |
+| logistics | ghn.vn | 6.2% | 20.8% | 29.9% | 3,458 |
+| lifestyle | nhathuoclongchau.com.vn | 6.1% | 20.9% | 31.8% | 1,325 |
+| fintech | vnpayapp.vn | 5.2% | 18.3% | 31.0% | 1,870 |
+| retail | www.decathlon.vn | 4.0% | 14.8% | 23.8% | 3,039 |
+| education | www.hoasen.edu.vn | 2.5% | 10.5% | 18.3% | 1,651 |
+| software | amis.misa.vn | 2.9% | 9.8% | 15.1% | 4,856 |
+| construction | kalealifts.com.vn | 2.3% | 8.2% | **12.8%** | 7,762 |
+
+**Two clean clusters:**
+
+- **Concentrated markets** (top-10 owns ~40–50% of citations): jewelry,
+  healthcare, banking, tourism. Brand recall and editorial authority matter.
+  Breaking in is hard; defending share is easier.
+- **Long-tail markets** (top-10 owns < 25%): construction, software,
+  education, retail. Many small players, fragmented authority. Easier to
+  enter; harder to defend.
+
+The construction vertical is the most striking outlier: 7,762 distinct
+domains cited, but the top-10 only captures **12.8%** of citations. AIO is
+genuinely pulling from a long tail in construction-related queries.
+
+![F7 — Citation concentration by vertical (stacked)](charts/f7_concentration_by_vertical.png)
+
+---
+
 ## Methodology notes
 
 - **Cleaning:** dropped ~5.3% of rows where the keyword references a SEONGON
