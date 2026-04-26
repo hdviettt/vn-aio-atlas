@@ -163,6 +163,21 @@ export const t: Strings = {
     vi: "% trích AIO cũng nằm trong top-10 organic",
   },
 
+  // F11
+  f11_eyebrow: { en: "finding 11", vi: "phát hiện 11" },
+  f11_title: {
+    en: "Different verticals reward different signals",
+    vi: "Các ngành khác nhau thưởng các tín hiệu khác nhau",
+  },
+  f11_takeaway: {
+    en: "Per-vertical replication of F9 reveals two patterns: (1) the sitelinks signal is universal but ranges from +116% (lifestyle) to +286% (banking) — strongest in regulated/concentrated markets. (2) Other signals flip sign by vertical: ratings help in jewelry (+96%), software (+63%), banking (+35%) but actively hurt cited likelihood in tourism (-61%) and healthcare (-34%). Operators cannot apply a one-size-fits-all playbook.",
+    vi: "Tái lập F9 theo ngành hé lộ hai mẫu: (1) tín hiệu sitelinks phổ quát nhưng dao động từ +116% (lifestyle) đến +286% (ngân hàng) — mạnh nhất ở thị trường có quy định/tập trung. (2) Các tín hiệu khác đảo dấu theo ngành: rating giúp ích trong trang sức (+96%), phần mềm (+63%), ngân hàng (+35%) nhưng chủ động hại khả năng được trích trong du lịch (-61%) và y tế (-34%). Operator không thể áp dụng một kịch bản chung cho mọi ngành.",
+  },
+  f11_caption: {
+    en: "Heatmap: relative difference between cited and uncited URLs in each vertical, for each feature. Blue = signal favors cited URLs (more sitelinks/lower rank-position/etc among cited). Red = signal favors uncited URLs. Sample: vertical-restricted to ≥200 cited URLs.",
+    vi: "Heatmap: chênh lệch tương đối giữa URL được trích và không trích trong mỗi ngành, cho mỗi đặc trưng. Xanh = tín hiệu ưu tiên URL được trích. Đỏ = tín hiệu ưu tiên URL không trích. Mẫu: hạn chế ngành có ≥200 URL trích.",
+  },
+
   // F10
   f10_eyebrow: { en: "finding 10", vi: "phát hiện 10" },
   f10_title: {

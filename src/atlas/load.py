@@ -635,6 +635,99 @@ def compute_findings(conn: Connection) -> None:
             """
         )
 
+        # F11 — Per-vertical cited-vs-uncited feature comparison.
+        # Single GROUP BY per vertical, conditional aggregation on
+        # url_cited. Cleaner than nested CTEs and avoids ambiguous
+        # column references. Restricted to verticals with >=200 cited
+        # URLs to keep means stable.
+        cur.execute("TRUNCATE atlas.f11_features_by_vertical")
+        cur.execute(
+            """
+            WITH base AS (
+                SELECT k.vertical, f.url_cited,
+                       f.title_length,
+                       f.description_length,
+                       f.rank_absolute,
+                       f.has_sitelinks,
+                       f.has_rating,
+                       f.has_highlighted
+                  FROM atlas.organic_features f
+                  JOIN atlas.keyword_results k ON k.id = f.keyword_result_id
+                 WHERE k.vertical <> 'unknown'
+            ),
+            big AS (
+                SELECT vertical
+                  FROM base
+                 WHERE url_cited
+                 GROUP BY vertical
+                HAVING COUNT(*) >= 200
+            ),
+            stats AS (
+                SELECT
+                    b.vertical,
+                    -- avg_title_length
+                    AVG(b.title_length) FILTER (WHERE b.url_cited)        AS cited_avg_title,
+                    AVG(b.title_length) FILTER (WHERE NOT b.url_cited)    AS uncited_avg_title,
+                    -- avg_description_length
+                    AVG(b.description_length) FILTER (WHERE b.url_cited)     AS cited_avg_desc,
+                    AVG(b.description_length) FILTER (WHERE NOT b.url_cited) AS uncited_avg_desc,
+                    -- avg_rank_absolute
+                    AVG(b.rank_absolute) FILTER (WHERE b.url_cited)        AS cited_avg_rank,
+                    AVG(b.rank_absolute) FILTER (WHERE NOT b.url_cited)    AS uncited_avg_rank,
+                    -- pct_has_sitelinks
+                    100.0 * AVG(CASE WHEN b.has_sitelinks THEN 1 ELSE 0 END) FILTER (WHERE b.url_cited)
+                                                                           AS cited_pct_sitelinks,
+                    100.0 * AVG(CASE WHEN b.has_sitelinks THEN 1 ELSE 0 END) FILTER (WHERE NOT b.url_cited)
+                                                                           AS uncited_pct_sitelinks,
+                    -- pct_has_rating
+                    100.0 * AVG(CASE WHEN b.has_rating THEN 1 ELSE 0 END) FILTER (WHERE b.url_cited)
+                                                                           AS cited_pct_rating,
+                    100.0 * AVG(CASE WHEN b.has_rating THEN 1 ELSE 0 END) FILTER (WHERE NOT b.url_cited)
+                                                                           AS uncited_pct_rating,
+                    -- pct_has_highlighted
+                    100.0 * AVG(CASE WHEN b.has_highlighted THEN 1 ELSE 0 END) FILTER (WHERE b.url_cited)
+                                                                           AS cited_pct_highlighted,
+                    100.0 * AVG(CASE WHEN b.has_highlighted THEN 1 ELSE 0 END) FILTER (WHERE NOT b.url_cited)
+                                                                           AS uncited_pct_highlighted,
+                    COUNT(*) FILTER (WHERE b.url_cited)::int               AS n_cited,
+                    COUNT(*) FILTER (WHERE NOT b.url_cited)::int           AS n_uncited
+                  FROM base b
+                  JOIN big USING (vertical)
+                 GROUP BY b.vertical
+            ),
+            unpivoted AS (
+                SELECT vertical, 'avg_title_length' AS feature,
+                       cited_avg_title AS cited_value, uncited_avg_title AS uncited_value,
+                       n_cited, n_uncited FROM stats
+                UNION ALL
+                SELECT vertical, 'avg_description_length',
+                       cited_avg_desc, uncited_avg_desc, n_cited, n_uncited FROM stats
+                UNION ALL
+                SELECT vertical, 'avg_rank_absolute',
+                       cited_avg_rank, uncited_avg_rank, n_cited, n_uncited FROM stats
+                UNION ALL
+                SELECT vertical, 'pct_has_sitelinks',
+                       cited_pct_sitelinks, uncited_pct_sitelinks, n_cited, n_uncited FROM stats
+                UNION ALL
+                SELECT vertical, 'pct_has_rating',
+                       cited_pct_rating, uncited_pct_rating, n_cited, n_uncited FROM stats
+                UNION ALL
+                SELECT vertical, 'pct_has_highlighted',
+                       cited_pct_highlighted, uncited_pct_highlighted, n_cited, n_uncited FROM stats
+            )
+            INSERT INTO atlas.f11_features_by_vertical
+                  (vertical, feature, cited_value, uncited_value, relative_diff_pct, n_cited, n_uncited)
+            SELECT vertical, feature,
+                   ROUND(cited_value::numeric, 4),
+                   ROUND(uncited_value::numeric, 4),
+                   ROUND(100.0 * (cited_value - uncited_value)
+                                 / NULLIF(uncited_value, 0)::numeric, 2),
+                   n_cited, n_uncited
+              FROM unpivoted
+             WHERE cited_value IS NOT NULL AND uncited_value IS NOT NULL
+            """
+        )
+
         # F10 — AIO answer characteristics by vertical
         cur.execute("TRUNCATE atlas.f10_aio_characteristics_by_vertical")
         cur.execute(
@@ -683,7 +776,7 @@ def compute_findings(conn: Connection) -> None:
             (datetime.utcnow(),),
         )
 
-    console.log("  findings tables populated (F1-F10)")
+    console.log("  findings tables populated (F1-F11)")
 
 
 def run_load() -> None:

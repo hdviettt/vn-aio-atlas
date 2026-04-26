@@ -193,6 +193,23 @@ CREATE TABLE atlas.f10_aio_characteristics_by_vertical (
     avg_refs_per_aio  numeric(6,2) NOT NULL
 );
 
+-- F11 — Per-vertical replication of F9. Same feature comparison
+-- (cited vs uncited URLs in AIO-positive SERPs), sliced by vertical
+-- so we can see whether the "sitelinks dominates" pattern holds in
+-- every market or whether different verticals reward different signals.
+CREATE TABLE atlas.f11_features_by_vertical (
+    vertical             text NOT NULL,
+    feature              text NOT NULL,
+    cited_value          numeric(12,4) NOT NULL,
+    uncited_value        numeric(12,4) NOT NULL,
+    relative_diff_pct    numeric(8,2),
+    n_cited              integer NOT NULL,
+    n_uncited            integer NOT NULL,
+    PRIMARY KEY (vertical, feature)
+);
+CREATE INDEX idx_f11_vertical ON atlas.f11_features_by_vertical (vertical);
+CREATE INDEX idx_f11_feature  ON atlas.f11_features_by_vertical (feature);
+
 -- ─── Run metadata ────────────────────────────────────────────────────
 
 CREATE TABLE atlas.load_runs (

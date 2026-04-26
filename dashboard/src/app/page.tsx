@@ -9,6 +9,7 @@ import {
   f8,
   f9,
   f10,
+  f11,
   getCorpusSummary,
   getVerticals,
 } from "@/lib/db";
@@ -16,6 +17,7 @@ import { isLang, type Lang, tx } from "@/lib/i18n";
 import { BarChartH } from "@/components/charts/BarChartH";
 import { BarChartV } from "@/components/charts/BarChartV";
 import { LineChart } from "@/components/charts/LineChart";
+import { Heatmap } from "@/components/charts/Heatmap";
 import { StickyHeader } from "@/components/StickyHeader";
 
 export const dynamic = "force-dynamic";
@@ -93,6 +95,7 @@ export default async function Home({
     f8Data,
     f9Data,
     f10Data,
+    f11Data,
   ] = await Promise.all([
     getCorpusSummary(),
     f1(vertical),
@@ -105,6 +108,7 @@ export default async function Home({
     f8(),
     f9(),
     f10(),
+    f11(),
   ]);
 
   const f2Map = new Map(f2Data.map((r) => [r.metric, Number(r.value)]));
@@ -437,6 +441,64 @@ export default async function Home({
             })}
           </div>
           <p className="text-xs text-slate-500 mt-4">{tx(lang, "f9_caption")}</p>
+        </Section>
+
+        {/* F11 — heatmap */}
+        <Section
+          id="f11"
+          eyebrow={tx(lang, "f11_eyebrow")}
+          title={tx(lang, "f11_title")}
+          takeaway={tx(lang, "f11_takeaway")}
+        >
+          {(() => {
+            const featureOrder = [
+              "pct_has_sitelinks",
+              "avg_rank_absolute",
+              "pct_has_rating",
+              "pct_has_highlighted",
+              "avg_description_length",
+              "avg_title_length",
+            ];
+            const featureLabels: Record<string, string> = {
+              pct_has_sitelinks: "sitelinks",
+              avg_rank_absolute: "rank",
+              pct_has_rating: "rating",
+              pct_has_highlighted: "highlighted",
+              avg_description_length: "desc len",
+              avg_title_length: "title len",
+            };
+            // Sort verticals by sitelinks signal strength
+            const sitelinks = new Map(
+              f11Data
+                .filter((r) => r.feature === "pct_has_sitelinks")
+                .map((r) => [r.vertical, Number(r.relative_diff_pct ?? 0)]),
+            );
+            const verticalsSorted = Array.from(sitelinks.entries())
+              .sort((a, b) => b[1] - a[1])
+              .map(([v]) => v);
+            // Heatmap data: relative_diff_pct except rank (which we negate so
+            // "blue = good for being cited" stays consistent)
+            const cells = f11Data.map((r) => ({
+              row: r.vertical,
+              col: r.feature,
+              value:
+                r.relative_diff_pct === null
+                  ? null
+                  : r.feature === "avg_rank_absolute"
+                    ? -Number(r.relative_diff_pct) // invert: lower rank = better for cited
+                    : Number(r.relative_diff_pct),
+            }));
+            return (
+              <Heatmap
+                data={cells}
+                rowOrder={verticalsSorted}
+                colOrder={featureOrder}
+                colLabels={featureLabels}
+                format="pct_diff"
+              />
+            );
+          })()}
+          <p className="text-xs text-slate-500 mt-4">{tx(lang, "f11_caption")}</p>
         </Section>
 
         {/* F10 */}

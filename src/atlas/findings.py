@@ -469,6 +469,124 @@ def finding_9_cited_vs_uncited_features() -> pl.DataFrame | None:
     return result
 
 
+def finding_11_features_by_vertical() -> pl.DataFrame | None:
+    """Per-vertical replication of F9.
+
+    Reads atlas.f11 (computed by load.py). Renders a heatmap of
+    relative_diff_pct for each (vertical, feature). Color-coded:
+    indigo for positive (cited > uncited), red for negative (cited <
+    uncited), gray for ~0. Reveals where the universal F9 patterns
+    diverge by vertical.
+    """
+    from atlas.db import atlas_conn
+
+    try:
+        with atlas_conn() as conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT vertical, feature, cited_value, uncited_value,
+                       relative_diff_pct, n_cited, n_uncited
+                  FROM atlas.f11_features_by_vertical
+                """
+            )
+            rows = cur.fetchall()
+    except Exception as e:
+        console.log(f"  F11 skipped: {e}")
+        return None
+
+    if not rows:
+        console.log("  F11 has no rows — run load to populate")
+        return None
+
+    result = pl.DataFrame(
+        rows,
+        schema={
+            "vertical": pl.String,
+            "feature": pl.String,
+            "cited_value": pl.Float64,
+            "uncited_value": pl.Float64,
+            "relative_diff_pct": pl.Float64,
+            "n_cited": pl.Int64,
+            "n_uncited": pl.Int64,
+        },
+        orient="row",
+    )
+
+    # Build a wide pivot for the heatmap
+    pivot = result.pivot(values="relative_diff_pct", index="vertical", on="feature")
+    feature_order = [
+        "pct_has_sitelinks",
+        "avg_rank_absolute",
+        "pct_has_rating",
+        "pct_has_highlighted",
+        "avg_description_length",
+        "avg_title_length",
+    ]
+    feature_labels = {
+        "pct_has_sitelinks": "sitelinks",
+        "avg_rank_absolute": "rank",
+        "pct_has_rating": "rating",
+        "pct_has_highlighted": "highlighted",
+        "avg_description_length": "desc len",
+        "avg_title_length": "title len",
+    }
+    available_features = [f for f in feature_order if f in pivot.columns]
+
+    # Sort verticals by sitelinks signal strength (most reliable feature)
+    sort_col = "pct_has_sitelinks" if "pct_has_sitelinks" in pivot.columns else available_features[0]
+    pivot = pivot.sort(sort_col, descending=True)
+    verticals_sorted = pivot["vertical"].to_list()
+
+    import numpy as np
+
+    matrix = np.zeros((len(verticals_sorted), len(available_features)))
+    for i, vert in enumerate(verticals_sorted):
+        for j, feat in enumerate(available_features):
+            val = pivot.filter(pl.col("vertical") == vert)[feat][0]
+            matrix[i, j] = float(val) if val is not None else 0.0
+
+    fig, ax = plt.subplots(figsize=(10, max(5, len(verticals_sorted) * 0.5)))
+    # Diverging colormap centered at 0
+    vmax = max(abs(matrix.min()), abs(matrix.max()))
+    im = ax.imshow(
+        matrix,
+        cmap="RdBu_r",
+        vmin=-vmax,
+        vmax=vmax,
+        aspect="auto",
+    )
+    ax.set_xticks(range(len(available_features)))
+    ax.set_xticklabels(
+        [feature_labels[f] for f in available_features], rotation=30, ha="right"
+    )
+    ax.set_yticks(range(len(verticals_sorted)))
+    ax.set_yticklabels(verticals_sorted)
+
+    # Annotate each cell
+    for i in range(len(verticals_sorted)):
+        for j in range(len(available_features)):
+            v = matrix[i, j]
+            color = "white" if abs(v) > vmax * 0.55 else "#1e293b"
+            ax.text(j, i, f"{v:+.0f}%", ha="center", va="center", fontsize=9, color=color)
+
+    cbar = fig.colorbar(im, ax=ax, shrink=0.8)
+    cbar.set_label("cited vs uncited (relative %)", fontsize=10)
+
+    ax.set_title(
+        "F11 — feature signals: cited vs uncited URLs, by vertical\n"
+        "blue = signal favors cited URLs · red = signal favors uncited URLs",
+        loc="left",
+        weight="bold",
+        fontsize=11,
+    )
+    fig.tight_layout()
+    out = CHARTS_DIR / "f11_features_by_vertical.png"
+    fig.savefig(out)
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return result
+
+
 def finding_10_aio_characteristics_by_vertical() -> pl.DataFrame | None:
     """AIO answer length and reference count, sliced by vertical.
 
@@ -754,6 +872,47 @@ def run_all() -> None:
     for r in f5.iter_rows(named=True):
         t5.add_row(r["vertical"], f"{r['rows']:,}", f"{r['aio_rows']:,}", f"{r['aio_pct']}%")
     console.print(t5)
+
+    console.log("\n[bold]Finding 11 — feature signals by vertical[/]")
+    f11 = finding_11_features_by_vertical()
+    if f11 is not None:
+        # Show sitelinks signal across verticals (the headline)
+        sitelinks = f11.filter(pl.col("feature") == "pct_has_sitelinks").sort(
+            "relative_diff_pct", descending=True
+        )
+        t11 = Table(title="F11: sitelinks signal by vertical (relative diff cited vs uncited)")
+        t11.add_column("vertical")
+        t11.add_column("cited %", justify="right")
+        t11.add_column("uncited %", justify="right")
+        t11.add_column("Δ rel %", justify="right")
+        t11.add_column("n cited", justify="right")
+        for r in sitelinks.iter_rows(named=True):
+            t11.add_row(
+                r["vertical"],
+                f"{r['cited_value']:.1f}",
+                f"{r['uncited_value']:.1f}",
+                f"{r['relative_diff_pct']:+.1f}%" if r["relative_diff_pct"] is not None else "—",
+                f"{r['n_cited']:,}",
+            )
+        console.print(t11)
+
+        # Show rating signal — the one with vertical sign-flips
+        rating = f11.filter(pl.col("feature") == "pct_has_rating").sort(
+            "relative_diff_pct", descending=True
+        )
+        tr = Table(title="F11: rating signal by vertical (sign-flipping signal)")
+        tr.add_column("vertical")
+        tr.add_column("cited %", justify="right")
+        tr.add_column("uncited %", justify="right")
+        tr.add_column("Δ rel %", justify="right")
+        for r in rating.iter_rows(named=True):
+            tr.add_row(
+                r["vertical"],
+                f"{r['cited_value']:.1f}",
+                f"{r['uncited_value']:.1f}",
+                f"{r['relative_diff_pct']:+.1f}%" if r["relative_diff_pct"] is not None else "—",
+            )
+        console.print(tr)
 
     console.log("\n[bold]Finding 10 — AIO characteristics by vertical[/]")
     f10 = finding_10_aio_characteristics_by_vertical()

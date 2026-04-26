@@ -276,6 +276,77 @@ known SQL extraction bug in the source pull (counts JSON-null prices as
 
 ---
 
+## F11 — Different verticals reward different signals (new)
+
+Per-vertical replication of F9. The same cited-vs-uncited URL feature
+comparison, sliced by vertical so we can see whether the universal
+"sitelinks +213%" finding holds uniformly or whether different markets
+reward different signals.
+
+**Finding 1: The sitelinks signal is universal but ranges from +116% to +286%.**
+
+| vertical | cited % | uncited % | relative diff | n cited |
+|---|---:|---:|---:|---:|
+| **banking** | 12.2% | 3.1% | **+286%** | 12,310 |
+| software | 22.4% | 6.2% | +259% | 1,801 |
+| logistics | 20.4% | 5.7% | +255% | 3,076 |
+| tourism | 8.6% | 2.6% | +230% | 490 |
+| education | 14.5% | 4.5% | +226% | 2,888 |
+| healthcare | 12.3% | 3.9% | +212% | 6,031 |
+| construction | 15.9% | 5.4% | +196% | 6,851 |
+| jewelry | 7.3% | 2.8% | +165% | 288 |
+| fmcg | 6.4% | 2.5% | +158% | 4,465 |
+| fintech | 11.5% | 4.7% | +147% | 2,884 |
+| retail | 12.7% | 5.8% | +119% | 951 |
+| **lifestyle** | 10.0% | 4.6% | **+116%** | 1,906 |
+
+The sitelinks signal holds in every vertical with statistical confidence
+(n_cited ranges from 288 to 12,310). But the strength varies materially
+— banking rewards sitelinks 2.5× more than lifestyle. Banking, software,
+and logistics show the strongest effect; lifestyle and retail the weakest.
+
+**Finding 2: The rating signal flips sign by vertical.** Unlike sitelinks,
+the structured-data "rating" feature shows opposite effects in different
+markets:
+
+| vertical | cited % | uncited % | relative diff |
+|---|---:|---:|---:|
+| **jewelry** | 19.8% | 10.1% | **+96%** |
+| software | 18.3% | 11.2% | +63% |
+| banking | 12.0% | 8.9% | +35% |
+| education | 9.7% | 8.2% | +18% |
+| retail | 11.5% | 9.9% | +16% |
+| fintech | 14.4% | 13.2% | +9% |
+| construction | 13.9% | 13.1% | +6% |
+| logistics | 10.3% | 10.0% | +3% |
+| lifestyle | 10.6% | 10.9% | −2% |
+| fmcg | 8.7% | 9.8% | −11% |
+| **healthcare** | 2.8% | 4.2% | **−34%** |
+| **tourism** | 1.2% | 3.1% | **−61%** |
+
+Ratings *help* citation odds in jewelry, software, banking, and retail —
+where ratings on product/service pages are credible authority signals.
+Ratings *hurt* citation odds in healthcare and tourism — where AIO
+prefers editorial/informational content over commercial pages with
+ratings, treating ratings as a signal of commercial-not-informational
+intent.
+
+**Finding 3: The rank effect is uniform.** Unlike sitelinks and ratings,
+average rank position of cited URLs is consistently 25–41% lower (better)
+than uncited URLs across every vertical. Rank matters everywhere, equally.
+
+**Operational implication:** The F9 finding "sitelinks dominate" is a true
+universal — every operator should pursue it. But the F9 finding "title
+length doesn't matter" can mask vertical-specific signals that *do*
+matter. SEO operators in jewelry should aggressively deploy ratings;
+healthcare operators should NOT (it actively hurts citation odds).
+**One-size-fits-all SEO playbooks cannot capture these per-vertical
+signal flips.**
+
+![F11 — feature signals heatmap](charts/f11_features_by_vertical.png)
+
+---
+
 ## F10 — Healthcare AIOs are 67% longer than jewelry AIOs (new)
 
 Average AIO answer length and reference count vary substantially by
