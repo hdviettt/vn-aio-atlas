@@ -210,6 +210,74 @@ def finding_3_top_cited_domains(top_k: int = 25) -> pl.DataFrame:
     return result
 
 
+def finding_6_top_cited_by_vertical(top_k: int = 10) -> pl.DataFrame:
+    """Top cited domains within each vertical.
+
+    Joins AIO ref domains to cleaned meta (which has vertical tags) so each
+    citation is attributed to the SEONGON-client vertical that triggered
+    that SERP. Useful for: 'who owns AIO citations in banking vs healthcare?'
+    """
+    refs = pl.read_parquet(RAW_DIR / "aio_refs_domains.parquet")
+    meta = _load_meta().select("id", "vertical")
+
+    joined = refs.join(meta, on="id", how="inner")
+    exploded = joined.explode("cited_domains").rename({"cited_domains": "domain"}).filter(
+        pl.col("domain").is_not_null()
+    )
+
+    counts = (
+        exploded.group_by("vertical", "domain")
+        .agg(pl.len().alias("citations"))
+        .sort(["vertical", "citations"], descending=[False, True])
+    )
+
+    # Keep top-K per vertical
+    top_per_vertical = counts.with_columns(
+        pl.col("citations").rank("ordinal", descending=True).over("vertical").alias("rank")
+    ).filter(pl.col("rank") <= top_k)
+
+    # Filter out tiny verticals (<1K rows total)
+    big_verticals = (
+        meta.group_by("vertical").agg(pl.len().alias("vrows")).filter(pl.col("vrows") >= 1000)
+    )["vertical"].to_list()
+    top_per_vertical = top_per_vertical.filter(pl.col("vertical").is_in(big_verticals))
+
+    # One chart per vertical, gridded
+    verticals_sorted = sorted(big_verticals)
+    n = len(verticals_sorted)
+    cols = 3
+    rows = (n + cols - 1) // cols
+    fig, axes = plt.subplots(rows, cols, figsize=(16, 3.2 * rows))
+    axes = axes.flatten() if rows > 1 else [axes] if cols == 1 else axes
+
+    for i, vertical in enumerate(verticals_sorted):
+        ax = axes[i]
+        sub = top_per_vertical.filter(pl.col("vertical") == vertical).sort("citations")
+        if sub.is_empty():
+            ax.set_visible(False)
+            continue
+        ax.barh(sub["domain"], sub["citations"], color=INDIGO, edgecolor="white")
+        ax.set_title(vertical, fontsize=11, weight="bold", loc="left")
+        ax.tick_params(labelsize=8)
+        ax.set_xlabel("citations", fontsize=8)
+
+    for j in range(len(verticals_sorted), len(axes)):
+        axes[j].set_visible(False)
+
+    fig.suptitle(
+        f"Top {top_k} AIO-cited domains by SEONGON-client vertical",
+        weight="bold",
+        fontsize=14,
+        y=1.0,
+    )
+    fig.tight_layout()
+    out = CHARTS_DIR / "f6_top_cited_by_vertical.png"
+    fig.savefig(out, bbox_inches="tight")
+    plt.close(fig)
+    console.log(f"  wrote {out}")
+    return top_per_vertical
+
+
 def finding_5_aio_rate_by_vertical(meta: pl.DataFrame) -> pl.DataFrame:
     """AIO appearance rate by vertical — reveals which verticals AIO dominates."""
     result = (
@@ -339,6 +407,20 @@ def run_all() -> None:
     for r in f5.iter_rows(named=True):
         t5.add_row(r["vertical"], f"{r['rows']:,}", f"{r['aio_rows']:,}", f"{r['aio_pct']}%")
     console.print(t5)
+
+    console.log("\n[bold]Finding 6 — top cited domains by vertical[/]")
+    f6 = finding_6_top_cited_by_vertical(top_k=10)
+    # Print just the top 5 per vertical to keep console output readable
+    for vertical in sorted(f6["vertical"].unique().to_list()):
+        sub = f6.filter(pl.col("vertical") == vertical).sort("citations", descending=True).head(5)
+        if sub.is_empty():
+            continue
+        t6 = Table(title=f"F6: top 5 cited domains in {vertical}")
+        t6.add_column("domain")
+        t6.add_column("citations", justify="right")
+        for r in sub.iter_rows(named=True):
+            t6.add_row(r["domain"], f"{r['citations']:,}")
+        console.print(t6)
 
 
 if __name__ == "__main__":
