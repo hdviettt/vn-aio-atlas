@@ -51,6 +51,10 @@ breakdown with charts and methodology in **[FINDINGS.md](./FINDINGS.md)**.
 - Not a tracking SaaS. Profound, Peec, AthenaHQ, HubSpot AEO already exist. This is a research artifact, not a recurring monitoring product.
 - Not anonymous data dump. Where data is published it will be aggregated to vertical or domain level — never raw client SERPs.
 
+## Live dashboard
+
+**[vn-aio-atlas-dashboard-production.up.railway.app](https://vn-aio-atlas-dashboard-production.up.railway.app)** — single-page interactive view of all 9 findings, reading directly from the Atlas Postgres. Updates whenever the data is reloaded.
+
 ## Architecture
 
 Three-tier data flow:

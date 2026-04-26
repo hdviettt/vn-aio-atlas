@@ -153,7 +153,7 @@ export default async function Home() {
               value: Number(r.aio_pct),
             }))}
             yLabel="AIO presence rate (%)"
-            valueFormatter={(v) => `${v.toFixed(0)}%`}
+            format="pct"
           />
         </Section>
 
@@ -199,7 +199,7 @@ export default async function Home() {
             }))}
             xLabel="AIO citations"
             height={520}
-            valueFormatter={fmtNum}
+            format="num"
           />
         </Section>
 
@@ -234,7 +234,7 @@ export default async function Home() {
             }))}
             xLabel="AIO presence (%)"
             height={420}
-            valueFormatter={fmtPct}
+            format="pct"
           />
         </Section>
 
@@ -293,7 +293,7 @@ export default async function Home() {
             }))}
             xLabel="% of citations going to top 10 domains"
             height={420}
-            valueFormatter={fmtPct}
+            format="pct"
           />
         </Section>
 
@@ -311,7 +311,7 @@ export default async function Home() {
             }))}
             xLabel="% of AIO citations also in organic top-10"
             height={420}
-            valueFormatter={fmtPct}
+            format="pct"
           />
         </Section>
 

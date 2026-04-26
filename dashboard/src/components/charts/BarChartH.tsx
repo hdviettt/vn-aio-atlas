@@ -14,17 +14,25 @@ import {
 const INDIGO = "#4f46e5";
 
 export type BarRow = { label: string; value: number; sub?: string };
+export type ValueFormat = "pct" | "num" | "raw";
+
+function fmt(v: unknown, format: ValueFormat = "raw"): string {
+  if (typeof v !== "number") return String(v);
+  if (format === "pct") return `${v.toFixed(1)}%`;
+  if (format === "num") return v.toLocaleString();
+  return String(v);
+}
 
 export function BarChartH({
   data,
   xLabel,
   height = 320,
-  valueFormatter,
+  format = "raw",
 }: {
   data: BarRow[];
   xLabel?: string;
   height?: number;
-  valueFormatter?: (v: number) => string;
+  format?: ValueFormat;
 }) {
   return (
     <div style={{ width: "100%", height }}>
@@ -37,7 +45,7 @@ export function BarChartH({
           <CartesianGrid strokeDasharray="2 4" stroke="#e5e7eb" horizontal={false} />
           <XAxis
             type="number"
-            tickFormatter={valueFormatter}
+            tickFormatter={(v) => fmt(v, format)}
             tick={{ fontSize: 11, fill: "#475569" }}
             label={
               xLabel
@@ -53,9 +61,7 @@ export function BarChartH({
           />
           <Tooltip
             cursor={{ fill: "rgba(79, 70, 229, 0.08)" }}
-            formatter={(v) =>
-              typeof v === "number" && valueFormatter ? valueFormatter(v) : String(v)
-            }
+            formatter={(v) => fmt(v, format)}
           />
           <Bar dataKey="value" radius={[0, 0, 0, 0]}>
             {data.map((_, i) => (
