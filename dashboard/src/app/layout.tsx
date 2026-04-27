@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
-import { Inter, Source_Serif_4 } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
+// Body + display: Inter throughout. Tight tracking on display sizes
+// gives editorial feel without the "academic paper" weight of a serif.
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin", "vietnamese"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
-const sourceSerif = Source_Serif_4({
-  variable: "--font-display",
+// Mono: every number-bearing surface uses tabular numerals from this.
+// JetBrains Mono has crisp, slightly compact digits well-suited to
+// data-dense displays. Loaded only with the weights we use.
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin", "vietnamese"],
-  weight: ["600", "700", "900"],
+  display: "swap",
+  weight: ["400", "500", "600"],
 });
 
 const SITE_URL = "https://vn-aio-atlas-dashboard-production.up.railway.app";
@@ -53,10 +61,7 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-    },
+    googleBot: { index: true, follow: true },
   },
   alternates: {
     canonical: SITE_URL,
@@ -64,6 +69,9 @@ export const metadata: Metadata = {
       en: `${SITE_URL}/?lang=en`,
       vi: `${SITE_URL}/?lang=vi`,
     },
+  },
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
 };
 
@@ -75,7 +83,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${sourceSerif.variable} h-full antialiased`}
+      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">{children}</body>
     </html>

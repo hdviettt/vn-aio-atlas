@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Quote, Check } from "lucide-react";
+import { Icon } from "@/components/ui/Icon";
 
 export function CiteButton({ lang = "en" }: { lang?: "en" | "vi" }) {
   const [copied, setCopied] = useState(false);
@@ -17,7 +19,6 @@ export function CiteButton({ lang = "en" }: { lang?: "en" | "vi" }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard might not be available; fall back to selection
       const ta = document.createElement("textarea");
       ta.value = citation;
       document.body.appendChild(ta);
@@ -33,16 +34,19 @@ export function CiteButton({ lang = "en" }: { lang?: "en" | "vi" }) {
     <button
       type="button"
       onClick={copyCitation}
-      className="text-xs text-slate-500 hover:text-indigo-700 transition-colors text-left w-full"
+      className="inline-flex items-center gap-1.5 text-[12px] text-ink-2 hover:text-accent w-full text-left"
       title={citation}
     >
-      {copied
-        ? lang === "vi"
-          ? "✓ Đã sao chép trích dẫn"
-          : "✓ Citation copied"
-        : lang === "vi"
-          ? "📋 Trích dẫn nghiên cứu này"
-          : "📋 Cite this study"}
+      <Icon name={copied ? Check : Quote} size={14} className={copied ? "text-positive" : ""} />
+      <span>
+        {copied
+          ? lang === "vi"
+            ? "Đã sao chép trích dẫn"
+            : "Citation copied"
+          : lang === "vi"
+            ? "Trích dẫn nghiên cứu này"
+            : "Cite this study"}
+      </span>
     </button>
   );
 }

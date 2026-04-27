@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { Icon } from "@/components/ui/Icon";
 
 export type SelectOption = {
   value: string;
   label: string;
 };
 
+/**
+ * Select — replaces native <select>. Custom dropdown with proper
+ * styling, keyboard support (Esc to close, click-outside-to-close),
+ * smooth transitions, full ARIA.
+ */
 export function Select({
   value,
   options,
@@ -24,7 +31,6 @@ export function Select({
   const ref = useRef<HTMLDivElement>(null);
   const current = options.find((o) => o.value === value);
 
-  // Close on outside click + Escape
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -50,30 +56,21 @@ export function Select({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
-        className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 text-sm font-medium text-zinc-900 bg-white border border-zinc-300 hover:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-colors"
+        className="w-full inline-flex items-center justify-between gap-2 h-9 px-3 text-sm font-medium text-ink bg-card border border-line hover:border-line-strong active:bg-card-2"
       >
         <span className="truncate">{current?.label ?? placeholder ?? "Select"}</span>
-        <svg
-          width={12}
-          height={12}
-          viewBox="0 0 12 12"
-          fill="none"
-          className={`flex-shrink-0 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`}
-          aria-hidden="true"
-        >
-          <path
-            d="M3 4.5l3 3 3-3"
-            stroke="currentColor"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        <Icon
+          name={ChevronDown}
+          size={14}
+          className={`flex-shrink-0 text-ink-3 transition-transform duration-[var(--motion-fast)] ${
+            open ? "rotate-180" : ""
+          }`}
+        />
       </button>
       {open && (
         <div
           role="listbox"
-          className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-zinc-300 shadow-lg"
+          className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto bg-card border border-line shadow-[0_4px_16px_rgba(0,0,0,0.06)] animate-fade-in-up"
         >
           {options.map((opt) => {
             const selected = opt.value === value;
@@ -87,10 +84,10 @@ export function Select({
                   onChange(opt.value);
                   setOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                className={`w-full text-left px-3 h-8 text-sm flex items-center ${
                   selected
-                    ? "bg-indigo-50 text-indigo-900 font-semibold"
-                    : "text-zinc-700 hover:bg-zinc-50"
+                    ? "bg-accent-tint text-accent font-semibold"
+                    : "text-ink-2 hover:bg-card-2 hover:text-ink"
                 }`}
               >
                 {opt.label}

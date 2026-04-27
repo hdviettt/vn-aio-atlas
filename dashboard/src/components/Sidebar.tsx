@@ -2,26 +2,49 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
 
 import type { Lang } from "@/lib/i18n";
 import { CiteButton } from "@/components/CiteButton";
+import { Monogram } from "@/components/Monogram";
+import { Eyebrow } from "@/components/ui/Eyebrow";
+import { Icon } from "@/components/ui/Icon";
 import { Select } from "@/components/ui/Select";
 import { SegmentedToggle } from "@/components/ui/SegmentedToggle";
 
-export type FindingNavItem = {
+/**
+ * SidebarItem — discriminated union so the sidebar nav matches the
+ * page's actual hierarchy: roman-numeral sections (clickable to that
+ * section's anchor) plus their nested findings.
+ *
+ * Section heads can either group findings beneath them (kind="section",
+ * with no findings nested under VI–VIII) or stand alone as standalone
+ * scrollable anchors (the closing sections).
+ */
+export type SidebarFinding = {
+  kind: "finding";
   id: string;
-  label: string;
   number: string;
+  label: string;
 };
 
+export type SidebarSection = {
+  kind: "section";
+  id: string; // anchor to scroll to
+  number: string; // "I", "II", ...
+  label: string; // section label
+};
+
+export type SidebarItem = SidebarSection | SidebarFinding;
+
 export function Sidebar({
-  findings,
+  items,
   verticals,
   vertical,
   lang,
   labels,
 }: {
-  findings: FindingNavItem[];
+  items: SidebarItem[];
   verticals: string[];
   vertical?: string;
   lang: Lang;
@@ -43,12 +66,12 @@ export function Sidebar({
       },
       { rootMargin: "-30% 0px -60% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
-    findings.forEach((f) => {
-      const el = document.getElementById(f.id);
+    items.forEach((item) => {
+      const el = document.getElementById(item.id);
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, [findings]);
+  }, [items]);
 
   const goWith = (next: URLSearchParams) => {
     router.push(
@@ -80,25 +103,35 @@ export function Sidebar({
   const navContent = (
     <>
       {/* Brand */}
-      <div className="px-6 py-7 border-b border-zinc-200">
-        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-600 mb-1">
-          atlas
+      <div className="px-6 py-7 border-b border-line">
+        <div className="flex items-center gap-3">
+          <a
+            href={lang === "en" ? "/" : "/?lang=vi"}
+            className="text-accent hover:text-[var(--color-accent-hover)]"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Atlas home"
+          >
+            <Monogram size={28} />
+          </a>
+          <div className="min-w-0">
+            <div className="eyebrow text-accent mb-0.5">atlas</div>
+            <a
+              href={lang === "en" ? "/" : "/?lang=vi"}
+              className="block text-[15px] font-semibold tracking-tight text-ink leading-tight hover:text-accent truncate"
+              onClick={() => setMobileOpen(false)}
+            >
+              {lang === "vi" ? "AI Overview Việt Nam" : "Vietnam AI Overview"}
+            </a>
+          </div>
         </div>
-        <a
-          href={lang === "en" ? "/" : "/?lang=vi"}
-          className="block font-display text-xl font-bold tracking-tight text-zinc-900 leading-tight hover:text-indigo-700 transition-colors"
-          onClick={() => setMobileOpen(false)}
-        >
-          {lang === "vi" ? "AI Overview Việt Nam" : "Vietnam AI Overview"}
-        </a>
       </div>
 
       {/* Controls */}
-      <div className="px-6 py-5 border-b border-zinc-200 space-y-4">
+      <div className="px-6 py-5 border-b border-line space-y-4">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-1.5">
+          <Eyebrow tone="muted" className="mb-1.5">
             {vertical ? labels.viewing : labels.all}
-          </div>
+          </Eyebrow>
           <Select
             value={vertical ?? "all"}
             options={verticalOptions}
@@ -107,9 +140,9 @@ export function Sidebar({
           />
         </div>
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-1.5">
+          <Eyebrow tone="muted" className="mb-1.5">
             {labels.languageLabel}
-          </div>
+          </Eyebrow>
           <SegmentedToggle<Lang>
             value={lang}
             options={[
@@ -122,64 +155,84 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* Findings nav */}
-      <nav className="px-2 py-4 flex-1 overflow-y-auto">
-        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-2 px-4">
-          {lang === "vi" ? "phát hiện" : "findings"}
-        </div>
-        <ul className="space-y-0.5">
-          {findings.map((f) => (
-            <li key={f.id}>
-              <a
-                href={`#${f.id}`}
-                onClick={() => setMobileOpen(false)}
-                className={`block px-4 py-1.5 text-xs leading-snug border-l-2 transition-colors ${
-                  activeId === f.id
-                    ? "border-indigo-600 bg-indigo-50 text-indigo-900 font-semibold"
-                    : "border-transparent text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                }`}
-              >
-                <span className="tabular-nums text-zinc-400 mr-2 font-mono text-[10px]">
-                  {f.number.padStart(2, "0")}
-                </span>
-                {f.label}
-              </a>
-            </li>
-          ))}
+      {/* TOC — sections + nested findings */}
+      <nav className="px-2 py-4 flex-1 overflow-y-auto relative">
+        <Eyebrow tone="muted" className="mb-3 px-4">
+          {lang === "vi" ? "mục lục" : "contents"}
+        </Eyebrow>
+        <ul className="space-y-px">
+          {items.map((item) => {
+            const active = activeId === item.id;
+            if (item.kind === "section") {
+              return (
+                <li key={item.id} className="pt-3 first:pt-0">
+                  <a
+                    href={`#${item.id}`}
+                    onClick={() => setMobileOpen(false)}
+                    className={`block px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-colors ${
+                      active
+                        ? "text-accent"
+                        : "text-ink-3 hover:text-ink"
+                    }`}
+                  >
+                    <span
+                      className={`font-mono-num text-[10px] mr-2 ${
+                        active ? "text-accent" : "text-ink-4"
+                      }`}
+                    >
+                      {item.number}
+                    </span>
+                    {item.label}
+                  </a>
+                </li>
+              );
+            }
+            return (
+              <li key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block pl-9 pr-4 py-1.5 text-[13px] leading-snug transition-colors ${
+                    active
+                      ? "text-accent font-semibold"
+                      : "text-ink-2 hover:text-ink"
+                  }`}
+                >
+                  <span
+                    className={`font-mono-num text-[10px] mr-2 ${
+                      active ? "text-accent" : "text-ink-4"
+                    }`}
+                  >
+                    {item.number.padStart(2, "0")}
+                  </span>
+                  {item.label}
+                </a>
+              </li>
+            );
+          })}
         </ul>
+        {/* Bottom scroll fade */}
+        <div
+          className="pointer-events-none absolute bottom-0 inset-x-0 h-8"
+          style={{
+            background:
+              "linear-gradient(to top, var(--color-card), transparent)",
+          }}
+          aria-hidden="true"
+        />
       </nav>
 
       {/* External links + citation */}
-      <div className="px-6 py-4 border-t border-zinc-200 space-y-2">
-        <a
-          href={
-            lang === "vi"
-              ? "https://github.com/hdviettt/vn-aio-atlas/blob/main/report/REPORT_vi.md"
-              : "https://github.com/hdviettt/vn-aio-atlas/blob/main/report/REPORT.md"
-          }
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-xs text-zinc-600 hover:text-indigo-700 transition-colors"
-        >
-          {lang === "vi" ? "→ Báo cáo đầy đủ" : "→ Full report"}
-        </a>
-        <a
-          href="https://github.com/hdviettt/vn-aio-atlas/blob/main/FINDINGS.md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-xs text-zinc-600 hover:text-indigo-700 transition-colors"
-        >
-          {lang === "vi" ? "→ Tài liệu kết quả" : "→ Findings doc"}
-        </a>
+      <div className="px-6 py-4 border-t border-line space-y-2">
         <a
           href="https://github.com/hdviettt/vn-aio-atlas"
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-xs text-zinc-600 hover:text-indigo-700 transition-colors"
+          className="block text-[12px] text-ink-2 hover:text-accent"
         >
           → GitHub
         </a>
-        <div className="pt-2 border-t border-zinc-100 mt-2">
+        <div className="pt-2 border-t border-line mt-2">
           <CiteButton lang={lang} />
         </div>
       </div>
@@ -191,23 +244,23 @@ export function Sidebar({
       <button
         type="button"
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="md:hidden fixed top-4 left-4 z-30 bg-white border border-zinc-300 px-3 py-2 text-sm font-medium shadow-sm"
+        className="md:hidden fixed top-4 left-4 z-30 bg-card border border-line h-9 w-9 inline-flex items-center justify-center shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
         aria-expanded={mobileOpen}
         aria-label="Toggle navigation"
       >
-        {mobileOpen ? "✕" : "☰"}
+        <Icon name={mobileOpen ? X : Menu} size={16} />
       </button>
 
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-zinc-900/40 z-30"
+          className="md:hidden fixed inset-0 bg-ink/40 z-30 animate-fade-in-up"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-[260px] bg-white border-r border-zinc-200 flex flex-col transition-transform md:translate-x-0 ${
+        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-[260px] bg-card border-r border-line flex flex-col transition-transform md:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
@@ -216,3 +269,6 @@ export function Sidebar({
     </>
   );
 }
+
+/* Re-export for backward-compatible types in page.tsx callers. */
+export type FindingNavItem = SidebarFinding;

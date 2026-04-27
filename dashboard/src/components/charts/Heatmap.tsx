@@ -6,18 +6,25 @@ export type HeatmapCell = {
   value: number | null;
 };
 
+/**
+ * Heatmap — pure-CSS grid-based heatmap. Diverging color scale: positive
+ * values use accent (indigo), negative use rose. Supports null cells
+ * (rendered as flat surface-2 with em-dash).
+ */
 export function Heatmap({
   data,
   rowOrder,
   colOrder,
   colLabels,
   format = "pct_diff",
+  ariaLabel,
 }: {
   data: HeatmapCell[];
   rowOrder?: string[];
   colOrder?: string[];
   colLabels?: Record<string, string>;
   format?: "pct_diff";
+  ariaLabel?: string;
 }) {
   const rows = rowOrder ?? Array.from(new Set(data.map((d) => d.row)));
   const cols = colOrder ?? Array.from(new Set(data.map((d) => d.col)));
@@ -31,25 +38,23 @@ export function Heatmap({
   const max = Math.max(...allValues.map((v) => Math.abs(v)));
 
   const colorFor = (v: number | null): string => {
-    if (v === null) return "#f1f5f9";
+    if (v === null) return "var(--color-card-2)";
     const t = Math.max(-1, Math.min(1, v / (max || 1)));
     if (t > 0) {
-      // Blue (indigo) for positive
       const intensity = Math.round(t * 100);
-      return `color-mix(in srgb, #4f46e5 ${intensity}%, white)`;
+      return `color-mix(in srgb, var(--color-accent) ${intensity}%, white)`;
     }
     if (t < 0) {
-      // Red for negative
       const intensity = Math.round(-t * 100);
-      return `color-mix(in srgb, #dc2626 ${intensity}%, white)`;
+      return `color-mix(in srgb, var(--color-negative) ${intensity}%, white)`;
     }
     return "white";
   };
 
   const textColorFor = (v: number | null): string => {
-    if (v === null) return "#94a3b8";
+    if (v === null) return "var(--color-ink-4)";
     const t = Math.abs(v) / (max || 1);
-    return t > 0.55 ? "#fff" : "#1e293b";
+    return t > 0.55 ? "#fff" : "var(--color-ink)";
   };
 
   const fmt = (v: number | null): string => {
@@ -60,14 +65,18 @@ export function Heatmap({
 
   return (
     <div className="overflow-x-auto">
-      <table className="border-separate" style={{ borderSpacing: 1 }}>
+      <table
+        className="border-separate"
+        style={{ borderSpacing: 1 }}
+        aria-label={ariaLabel ?? "Heatmap of feature differences across verticals"}
+      >
         <thead>
           <tr>
             <th className="bg-transparent" />
             {cols.map((c) => (
               <th
                 key={c}
-                className="px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-600 text-center"
+                className="px-3 py-2 eyebrow text-ink-3 text-center"
               >
                 {colLabels?.[c] ?? c}
               </th>
@@ -77,7 +86,7 @@ export function Heatmap({
         <tbody>
           {rows.map((r) => (
             <tr key={r}>
-              <td className="pr-3 py-2 text-sm font-medium text-slate-900 text-right">
+              <td className="pr-3 py-2 text-sm font-medium text-ink text-right">
                 {r}
               </td>
               {cols.map((c) => {
@@ -85,7 +94,7 @@ export function Heatmap({
                 return (
                   <td
                     key={c}
-                    className="text-center text-xs font-bold tabular-nums"
+                    className="text-center text-xs font-bold font-mono-num"
                     style={{
                       backgroundColor: colorFor(v),
                       color: textColorFor(v),

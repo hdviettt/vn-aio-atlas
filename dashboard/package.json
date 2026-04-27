@@ -9,11 +9,20 @@
     "deploy": "node scripts/deploy.mjs"
   },
   "dependencies": {
+    "@visx/axis": "^3.12.0",
+    "@visx/event": "^3.12.0",
+    "@visx/grid": "^3.12.0",
+    "@visx/group": "^3.12.0",
+    "@visx/responsive": "^3.12.0",
+    "@visx/scale": "^3.12.0",
+    "@visx/shape": "^3.12.0",
+    "@visx/text": "^3.12.0",
+    "@visx/tooltip": "^3.12.0",
+    "lucide-react": "^1.11.0",
     "next": "16.2.4",
     "pg": "^8.20.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "recharts": "^3.8.1"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

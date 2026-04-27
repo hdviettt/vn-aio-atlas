@@ -1,73 +1,146 @@
 @import "tailwindcss";
 
+/*
+ * VN-AIO-Atlas design tokens
+ * --------------------------
+ * Single source of truth for color, type, spacing, motion. The token
+ * names are chosen so they collapse cleanly into Tailwind v4 utilities
+ * via @theme inline below:
+ *
+ *   bg-page, bg-card, bg-card-2          (surfaces)
+ *   border-line, border-line-strong       (borders)
+ *   text-ink, text-ink-2, text-ink-3,    (text — primary→faint)
+ *     text-ink-4
+ *   bg-accent, text-accent, bg-accent-tint
+ *   text-positive, text-negative, text-warning
+ *
+ * Do NOT introduce slate-*, zinc-*, gray-* utility classes — they fight
+ * the tokens.
+ */
+
+:root {
+  /* ── Color: gray ramp ────────────────────────────────────────────── */
+  --color-page:        #fafafa; /* page background */
+  --color-card:        #ffffff; /* card / sidebar surface */
+  --color-card-2:      #f4f4f5; /* subtle surface (hover, alt rows) */
+  --color-line:        #e4e4e7; /* default border */
+  --color-line-strong: #d4d4d8; /* hover / focus border */
+
+  --color-ink:         #18181b; /* primary text */
+  --color-ink-2:       #52525b; /* secondary text, labels */
+  --color-ink-3:       #71717a; /* axis ticks, captions */
+  --color-ink-4:       #a1a1aa; /* placeholders, sub-text */
+
+  /* ── Single accent ──────────────────────────────────────────────── */
+  --color-accent:       #4f46e5; /* electric indigo */
+  --color-accent-hover: #4338ca;
+  --color-accent-tint:  #eef2ff;
+  --color-accent-ring:  rgba(79, 70, 229, 0.30);
+
+  /* ── State semantics — ONLY for state, never decoration ─────────── */
+  --color-positive: #16a34a;
+  --color-negative: #dc2626;
+  --color-warning:  #d97706;
+
+  /* ── Motion ──────────────────────────────────────────────────────── */
+  --motion-fast: 120ms;
+  --motion-base: 150ms;
+  --motion-slow: 200ms;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Type tokens ────────────────────────────────────────────────── */
+  --tracking-eyebrow: 0.18em;
+  --tracking-display: -0.025em;
+  --tracking-tight: -0.015em;
+}
+
+/* Tailwind v4 — register tokens as utility-class color names. */
 @theme inline {
-  --color-background: #fafaf7;
-  --color-foreground: #18181b;
+  --color-page: var(--color-page);
+  --color-card: var(--color-card);
+  --color-card-2: var(--color-card-2);
+  --color-line: var(--color-line);
+  --color-line-strong: var(--color-line-strong);
+  --color-ink: var(--color-ink);
+  --color-ink-2: var(--color-ink-2);
+  --color-ink-3: var(--color-ink-3);
+  --color-ink-4: var(--color-ink-4);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-tint: var(--color-accent-tint);
+  --color-positive: var(--color-positive);
+  --color-negative: var(--color-negative);
+  --color-warning: var(--color-warning);
+
   --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
+/* ── Base ──────────────────────────────────────────────────────────── */
 body {
-  background: #fafaf7;
-  color: #18181b;
+  background: var(--color-page);
+  color: var(--color-ink);
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
-  font-feature-settings: "ss01", "ss02", "cv11";
+  font-feature-settings: "ss01", "cv11";
 }
 
-/* Display font utility — Source Serif for editorial weight on titles */
-.font-display {
-  font-family: var(--font-display), Georgia, serif;
-  letter-spacing: -0.025em;
+/* ── Number presentation ──────────────────────────────────────────── */
+/* font-mono-num — JetBrains Mono with tabular figures. Use on every
+   data-bearing number: stat values, axis ticks, table cells. */
+.font-mono-num {
+  font-family: var(--font-mono), "JetBrains Mono", "SF Mono", monospace;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum", "cv11";
 }
 
-/* Use the Inter "Display" optical-size variant for big numbers — keep
-   numbers in sans (tabular) so they read as data, not as a quote. */
-.font-numbers {
-  font-family: var(--font-sans), Inter, system-ui, sans-serif;
-  font-variant-numeric: tabular-nums;
+/* font-num — Inter sans with tabular figures + tight tracking. Use on
+   prose-adjacent numbers where mono feels too computer-y. */
+.font-num {
+  font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum", "ss01";
-  letter-spacing: -0.025em;
+  letter-spacing: var(--tracking-tight);
 }
 
-/* Sidebar can have an off-white that's slightly lighter than the body */
-.bg-paper {
-  background-color: #ffffff;
+/* Display tracking — Inter at large sizes benefits from negative
+   tracking (Linear / Vercel / Stripe Press all do this). */
+.font-display-tight {
+  letter-spacing: var(--tracking-display);
 }
 
-/* Smooth scrolling for anchor jumps from the sidebar nav */
-html {
-  scroll-behavior: smooth;
+/* ── Eyebrow ──────────────────────────────────────────────────────── */
+/* Small caps label, repeated 30+ times across the page. Component
+   wrapper in src/components/ui/Eyebrow.tsx uses this base class. */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  line-height: 1.2;
 }
 
-/* Hero / section fade-in animation */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ── Focus ring (publication-grade) ───────────────────────────────── */
+/* 2px gap from element + 2px ring, stacked via box-shadow, so there's
+   no layout shift. Single global rule = the highest-leverage
+   accessibility-AND-polish change in the codebase. */
+:where(button, a, input, select, textarea, [role="button"], [role="option"], [tabindex]):focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-page),
+    0 0 0 4px var(--color-accent-ring);
+  border-radius: inherit;
+  transition: box-shadow var(--motion-fast) var(--motion-ease);
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+/* ── Motion discipline ────────────────────────────────────────────── */
+/* Default to single-property transitions. Components can override. */
+button, a, [role="button"], [role="option"] {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease);
 }
 
-.animate-fade-in-up-delay-1 {
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-}
-
-.animate-fade-in-up-delay-2 {
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
-}
-
-.animate-fade-in-up-delay-3 {
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
-}
-
-/* Honor reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
@@ -77,52 +150,105 @@ html {
   }
 }
 
-/* Print stylesheet — cleaner output for save/share-as-PDF */
+/* ── Hero / section fade-in animation ─────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up         { animation: fadeInUp 0.6s var(--motion-ease) both; }
+.animate-fade-in-up-delay-1 { animation: fadeInUp 0.6s var(--motion-ease) 0.08s both; }
+.animate-fade-in-up-delay-2 { animation: fadeInUp 0.6s var(--motion-ease) 0.16s both; }
+.animate-fade-in-up-delay-3 { animation: fadeInUp 0.6s var(--motion-ease) 0.24s both; }
+
+/* ── Skeleton pulse — softer than Tailwind's default for editorial feel */
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+.animate-pulse-soft { animation: pulseSoft 1.6s var(--motion-ease) infinite; }
+
+/* ── Scroll behavior ──────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+/* ── Print stylesheet ─────────────────────────────────────────────── */
 @media print {
-  /* Hide interactive chrome */
+  /* Hide chrome that doesn't belong on paper */
   aside,
   button[aria-label="Toggle navigation"],
+  button[aria-label="Back to top"],
+  button[aria-label="Lên đầu trang"],
   .no-print {
     display: none !important;
   }
 
-  main {
-    margin-left: 0 !important;
-  }
-
-  /* Avoid splitting findings across pages */
-  section {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  /* Tighter spacing for print */
+  /* Reset layout: full-width column, no flex sidebar offset */
+  main { margin-left: 0 !important; }
   body {
+    background: #fff !important;
     font-size: 10pt;
+    color: #000;
   }
 
-  h1 {
-    font-size: 22pt;
-  }
-  h2 {
-    font-size: 14pt;
-    margin-top: 18pt;
-  }
-
-  /* Indigo prints fine but darken slightly for contrast */
-  .text-indigo-600,
-  .text-indigo-700 {
-    color: #3730a3 !important;
+  /* Container max-width for readable line length on paper */
+  main > div {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
-  /* Remove sticky positioning */
-  .sticky {
-    position: static !important;
+  /* Type scale tightened for print */
+  h1 { font-size: 24pt; line-height: 1.1; }
+  h2 { font-size: 16pt; line-height: 1.15; margin-top: 18pt; }
+  h3 { font-size: 12pt; line-height: 1.2; }
+
+  /* Page-break behavior: keep findings + sections intact */
+  section { break-inside: avoid; page-break-inside: avoid; }
+  /* But allow chapter-like SectionDivider to start a fresh page */
+  section[id^="section-"] {
+    break-before: page;
+    page-break-before: always;
+    padding-top: 24pt !important;
+    margin-top: 0 !important;
+    border-top: none !important;
+  }
+  /* First section divider doesn't need a page break — already on page 1 */
+  section[id="section-i"]:first-of-type {
+    break-before: auto;
+    page-break-before: auto;
+  }
+  /* Headings shouldn't dangle at the bottom of a page */
+  h1, h2, h3 {
+    break-after: avoid-page;
+    page-break-after: avoid;
   }
 
-  /* Ensure background colors print */
+  /* Links: print the URL inline so paper readers can find sources */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #555;
+    word-break: break-all;
+  }
+  /* Don't print URLs for in-page anchors or mailto */
+  a[href^="#"]::after,
+  a[href^="mailto:"]::after { content: ""; }
+
+  /* Sticky/fixed elements have no place on paper */
+  .sticky { position: static !important; }
+  .fixed { position: static !important; display: none !important; }
+
+  /* Force colors to print accurately for chart bars and accent type */
   * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* Charts: ensure SVG and tables don't span pages */
+  svg, table, figure { break-inside: avoid; page-break-inside: avoid; }
+
+  /* Animations are noise on paper */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
