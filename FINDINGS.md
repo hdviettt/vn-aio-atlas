@@ -268,9 +268,24 @@ appear to be:
    data. Build pages and a site structure that earns Google sitelinks, and
    your AIO citation rate roughly triples.
 
-**Caveat:** `has_price` was excluded from this iteration due to a
-known SQL extraction bug in the source pull (counts JSON-null prices as
-"has price"). The fix is in `pull.py` for future re-pulls.
+**Updated finding (v0.4):** with the `has_price` extraction bug fixed
+in-place via a targeted reload, F9 now includes a second strong negative
+signal: **pages with structured price data are cited 49% less often
+than pages without** (1.67% vs 3.27%). This makes intuitive sense — AIO
+prefers informational sources over commercial product pages, and
+structured prices are a commercial-intent signal.
+
+Updated F9 ranking by absolute relative effect:
+
+| feature | cited | uncited | Δ relative |
+|---|---:|---:|---:|
+| pct_has_sitelinks | 13.2% | 4.2% | **+213%** |
+| pct_has_price | 1.7% | 3.3% | **−49%** |
+| avg_rank_absolute | 8.6 | 13.5 | **−37%** |
+| pct_has_rating | 10.7% | 9.7% | +10% |
+| avg_title_length | 51.0 | 49.5 | +3% |
+| avg_description_length | 157.3 | 153.7 | +2% |
+| pct_has_highlighted | 94.6% | 94.0% | +1% |
 
 ![F9 — Cited vs uncited URL features](charts/f9_cited_vs_uncited_features.png)
 

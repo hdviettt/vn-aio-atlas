@@ -611,11 +611,12 @@ def compute_findings(conn: Connection) -> None:
                     (SELECT 100.0 * AVG(CASE WHEN has_rating THEN 1 ELSE 0 END) FROM uncited),
                     (SELECT COUNT(*) FROM cited),
                     (SELECT COUNT(*) FROM uncited)
-                -- pct_has_price excluded: the source SQL in pull.py v1
-                -- counted JSON-null as "has price". Fixed in pull.py v2 but
-                -- the existing parquet was pulled with v1. Re-pull would
-                -- re-introduce the stalls we hit; sticking with v1 data
-                -- and dropping this metric for now.
+                UNION ALL
+                SELECT 'pct_has_price',
+                    (SELECT 100.0 * AVG(CASE WHEN has_price THEN 1 ELSE 0 END) FROM cited),
+                    (SELECT 100.0 * AVG(CASE WHEN has_price THEN 1 ELSE 0 END) FROM uncited),
+                    (SELECT COUNT(*) FROM cited),
+                    (SELECT COUNT(*) FROM uncited)
                 UNION ALL
                 SELECT 'pct_has_highlighted',
                     (SELECT 100.0 * AVG(CASE WHEN has_highlighted THEN 1 ELSE 0 END) FROM cited),
@@ -650,7 +651,8 @@ def compute_findings(conn: Connection) -> None:
                        f.rank_absolute,
                        f.has_sitelinks,
                        f.has_rating,
-                       f.has_highlighted
+                       f.has_highlighted,
+                       f.has_price
                   FROM atlas.organic_features f
                   JOIN atlas.keyword_results k ON k.id = f.keyword_result_id
                  WHERE k.vertical <> 'unknown'
@@ -689,6 +691,11 @@ def compute_findings(conn: Connection) -> None:
                                                                            AS cited_pct_highlighted,
                     100.0 * AVG(CASE WHEN b.has_highlighted THEN 1 ELSE 0 END) FILTER (WHERE NOT b.url_cited)
                                                                            AS uncited_pct_highlighted,
+                    -- pct_has_price (now valid after has_price fix)
+                    100.0 * AVG(CASE WHEN b.has_price THEN 1 ELSE 0 END) FILTER (WHERE b.url_cited)
+                                                                           AS cited_pct_price,
+                    100.0 * AVG(CASE WHEN b.has_price THEN 1 ELSE 0 END) FILTER (WHERE NOT b.url_cited)
+                                                                           AS uncited_pct_price,
                     COUNT(*) FILTER (WHERE b.url_cited)::int               AS n_cited,
                     COUNT(*) FILTER (WHERE NOT b.url_cited)::int           AS n_uncited
                   FROM base b
@@ -714,6 +721,9 @@ def compute_findings(conn: Connection) -> None:
                 UNION ALL
                 SELECT vertical, 'pct_has_highlighted',
                        cited_pct_highlighted, uncited_pct_highlighted, n_cited, n_uncited FROM stats
+                UNION ALL
+                SELECT vertical, 'pct_has_price',
+                       cited_pct_price, uncited_pct_price, n_cited, n_uncited FROM stats
             )
             INSERT INTO atlas.f11_features_by_vertical
                   (vertical, feature, cited_value, uncited_value, relative_diff_pct, n_cited, n_uncited)
