@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin", "vietnamese"],
+});
+
+const sourceSerif = Source_Serif_4({
+  variable: "--font-display",
+  subsets: ["latin", "vietnamese"],
+  weight: ["600", "700", "900"],
 });
 
 const SITE_URL = "https://vn-aio-atlas-dashboard-production.up.railway.app";
@@ -67,8 +73,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+    <html
+      lang="en"
+      className={`${inter.variable} ${sourceSerif.variable} h-full antialiased`}
+    >
+      <body className="min-h-full font-sans">{children}</body>
     </html>
   );
 }

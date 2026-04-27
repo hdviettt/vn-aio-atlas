@@ -1,26 +1,76 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: #0f172a;
+  font-family: var(--font-sans), Inter, system-ui, sans-serif;
+  font-feature-settings: "ss01", "ss02", "cv11";
+}
+
+/* Display font utility — Source Serif for editorial weight on hero / key stats */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+/* Smooth scrolling for anchor jumps from the sidebar nav */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Print stylesheet — cleaner output for save/share-as-PDF */
+@media print {
+  /* Hide interactive chrome */
+  aside,
+  button[aria-label="Toggle navigation"],
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    margin-left: 0 !important;
+  }
+
+  /* Avoid splitting findings across pages */
+  section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Tighter spacing for print */
+  body {
+    font-size: 10pt;
+  }
+
+  h1 {
+    font-size: 22pt;
+  }
+  h2 {
+    font-size: 14pt;
+    margin-top: 18pt;
+  }
+
+  /* Indigo prints fine but darken slightly for contrast */
+  .text-indigo-600,
+  .text-indigo-700 {
+    color: #3730a3 !important;
+  }
+
+  /* Remove sticky positioning */
+  .sticky {
+    position: static !important;
+  }
+
+  /* Ensure background colors print */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
