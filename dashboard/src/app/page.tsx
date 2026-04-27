@@ -92,21 +92,58 @@ export default async function Home({
     (r) => r.vertical === "banking" && r.feature === "pct_has_sitelinks",
   );
 
-  // Sidebar navigation
-  const findings: FindingNavItem[] = [
-    { id: "f1", number: "1", label: tx(lang, "f1_title").slice(0, 50) + "…" },
-    { id: "f2", number: "2", label: tx(lang, "f2_title").slice(0, 50) + "…" },
-    { id: "f3", number: "3", label: tx(lang, "f3_title").slice(0, 50) + "…" },
-    { id: "f4", number: "4", label: tx(lang, "f4_title").slice(0, 50) + "…" },
-    { id: "f5", number: "5", label: tx(lang, "f5_title").slice(0, 50) + "…" },
-    { id: "f6", number: "6", label: tx(lang, "f6_title").slice(0, 50) + "…" },
-    { id: "f7", number: "7", label: tx(lang, "f7_title").slice(0, 50) + "…" },
-    { id: "f8", number: "8", label: tx(lang, "f8_title").slice(0, 50) + "…" },
-    { id: "f9", number: "9", label: tx(lang, "f9_title").slice(0, 50) + "…" },
-    { id: "f10", number: "10", label: tx(lang, "f10_title").slice(0, 50) + "…" },
-    { id: "f11", number: "11", label: tx(lang, "f11_title").slice(0, 50) + "…" },
-    { id: "f12", number: "12", label: tx(lang, "f12_title").slice(0, 50) + "…" },
-  ];
+  // Sidebar navigation — short labels (full titles are on the section
+  // headings; the sidebar is for navigation, not preview).
+  const navLabels =
+    lang === "vi"
+      ? {
+          f1: "Truy vấn dài & AIO",
+          f2: "Trích ngoài top 10",
+          f3: "Mật độ trích nguồn",
+          f4: "Độ dài AIO theo thời gian",
+          f5: "AIO theo ngành",
+          f6: "Top trích theo ngành",
+          f7: "Tập trung trích",
+          f8: "Trùng lặp top-10",
+          f9: "URL được trích",
+          f10: "Đặc trưng AIO",
+          f11: "Tín hiệu theo ngành",
+          f12: "Thị phần theo thời gian",
+        }
+      : {
+          f1: "Long-tail & AIO presence",
+          f2: "Citations outside top 10",
+          f3: "Citation density",
+          f4: "AIO length over time",
+          f5: "AIO rate by vertical",
+          f6: "Top cited per vertical",
+          f7: "Citation concentration",
+          f8: "Top-10 overlap by vertical",
+          f9: "What gets cited",
+          f10: "AIO answer characteristics",
+          f11: "Per-vertical signals",
+          f12: "Share-of-voice over time",
+        };
+  const findings: FindingNavItem[] = (
+    [
+      ["f1", "1"],
+      ["f2", "2"],
+      ["f3", "3"],
+      ["f4", "4"],
+      ["f5", "5"],
+      ["f6", "6"],
+      ["f7", "7"],
+      ["f8", "8"],
+      ["f9", "9"],
+      ["f10", "10"],
+      ["f11", "11"],
+      ["f12", "12"],
+    ] as const
+  ).map(([id, number]) => ({
+    id,
+    number,
+    label: navLabels[id as keyof typeof navLabels],
+  }));
 
   return (
     <div className="min-h-screen bg-white text-slate-900 antialiased md:flex">
@@ -161,52 +198,63 @@ export default async function Home({
               </div>
             )}
 
-            {/* Big-stat row — 4 columns on desktop, 2 on mobile */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-8 pt-8 border-t border-slate-200 animate-fade-in-up-delay-3">
-              <Stat
-                label={tx(lang, "stat_rows")}
-                value={fmtNum(summary.total_rows)}
-                size="large"
-              />
-              <Stat
-                label={tx(lang, "stat_citations")}
-                value={fmtNum(summary.total_citations)}
-                size="large"
-                sub={tx(lang, "stat_citations_sub")}
-              />
-              <Stat
-                label={tx(lang, "stat_distinct_queries")}
-                value={fmtNum(summary.distinct_keywords)}
-                size="large"
-              />
-              <Stat
-                label={tx(lang, "stat_brand_projects")}
-                value={fmtNum(summary.distinct_projects)}
-                size="large"
-              />
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6 mt-6">
-              <Stat
-                label={tx(lang, "stat_aio_positive")}
-                value={fmtNum(summary.aio_rows)}
-                size="small"
-                sub={`${((summary.aio_rows / summary.total_rows) * 100).toFixed(0)}% ${tx(lang, "stat_aio_subtotal")}`}
-              />
-              <Stat
-                label={tx(lang, "stat_verticals")}
-                value={String(summary.distinct_verticals)}
-                size="small"
-              />
-              <Stat
-                label={tx(lang, "stat_from")}
-                value={summary.earliest?.slice(0, 10) ?? "—"}
-                size="small"
-              />
-              <Stat
-                label={tx(lang, "stat_to")}
-                value={summary.latest?.slice(0, 10) ?? "—"}
-                size="small"
-              />
+            {/* By the numbers — primary stats as a horizontal strip with
+                proper spacing for 7-digit numbers. Secondary stats below
+                as a smaller metadata row. */}
+            <div className="pt-10 border-t border-zinc-200 animate-fade-in-up-delay-3">
+              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-5">
+                {lang === "vi" ? "theo số liệu" : "by the numbers"}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-10 lg:gap-x-14 gap-y-7">
+                <Stat
+                  label={tx(lang, "stat_rows")}
+                  value={fmtNum(summary.total_rows)}
+                  size="large"
+                />
+                <Stat
+                  label={tx(lang, "stat_citations")}
+                  value={fmtNum(summary.total_citations)}
+                  size="large"
+                  sub={tx(lang, "stat_citations_sub")}
+                />
+                <Stat
+                  label={tx(lang, "stat_distinct_queries")}
+                  value={fmtNum(summary.distinct_keywords)}
+                  size="large"
+                />
+                <Stat
+                  label={tx(lang, "stat_brand_projects")}
+                  value={fmtNum(summary.distinct_projects)}
+                  size="large"
+                />
+              </div>
+
+              {/* Secondary metadata row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-10 lg:gap-x-14 gap-y-4 mt-10 pt-6 border-t border-zinc-200/70">
+                <Stat
+                  label={tx(lang, "stat_aio_positive")}
+                  value={fmtNum(summary.aio_rows)}
+                  size="small"
+                  sub={`${((summary.aio_rows / summary.total_rows) * 100).toFixed(0)}% ${tx(lang, "stat_aio_subtotal")}`}
+                />
+                <Stat
+                  label={tx(lang, "stat_verticals")}
+                  value={String(summary.distinct_verticals)}
+                  size="small"
+                />
+                <Stat
+                  label={lang === "vi" ? "khoảng thời gian" : "time range"}
+                  value={`${summary.earliest?.slice(5, 10) ?? "—"} → ${summary.latest?.slice(5, 10) ?? "—"}`}
+                  size="small"
+                  sub={summary.latest?.slice(0, 4) ?? ""}
+                />
+                <Stat
+                  label={lang === "vi" ? "phiên dữ liệu" : "snapshots"}
+                  value="459"
+                  size="small"
+                  sub={lang === "vi" ? "lượt thu thập SERP" : "SERP captures"}
+                />
+              </div>
             </div>
           </header>
 

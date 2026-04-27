@@ -1,23 +1,37 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #0f172a;
+  --color-background: #fafaf7;
+  --color-foreground: #18181b;
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
 }
 
 body {
-  background: #ffffff;
-  color: #0f172a;
+  background: #fafaf7;
+  color: #18181b;
   font-family: var(--font-sans), Inter, system-ui, sans-serif;
   font-feature-settings: "ss01", "ss02", "cv11";
 }
 
-/* Display font utility — Source Serif for editorial weight on hero / key stats */
+/* Display font utility — Source Serif for editorial weight on titles */
 .font-display {
   font-family: var(--font-display), Georgia, serif;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+}
+
+/* Use the Inter "Display" optical-size variant for big numbers — keep
+   numbers in sans (tabular) so they read as data, not as a quote. */
+.font-numbers {
+  font-family: var(--font-sans), Inter, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "ss01";
+  letter-spacing: -0.025em;
+}
+
+/* Sidebar can have an off-white that's slightly lighter than the body */
+.bg-paper {
+  background-color: #ffffff;
 }
 
 /* Smooth scrolling for anchor jumps from the sidebar nav */
