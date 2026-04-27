@@ -122,13 +122,21 @@ export default async function Home({
         <div className="mx-auto max-w-4xl px-6 md:px-12 py-14 md:py-20">
           {/* Hero */}
           <header className="mb-16 md:mb-24">
-            <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-600 mb-3">
-              {tx(lang, "header_eyebrow")}
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-indigo-600 animate-fade-in-up">
+                {tx(lang, "header_eyebrow")}
+              </div>
+              {summary.latest && (
+                <div className="text-[11px] font-medium text-slate-500 tabular-nums animate-fade-in-up">
+                  {lang === "vi" ? "Cập nhật" : "Updated"}{" "}
+                  {summary.latest.slice(0, 10)}
+                </div>
+              )}
             </div>
-            <h1 className="font-display text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-6 leading-[1.05]">
+            <h1 className="font-display text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-6 leading-[1.05] animate-fade-in-up-delay-1">
               {tx(lang, "header_title")}
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl mb-10">
+            <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl mb-10 animate-fade-in-up-delay-2">
               {tx(lang, "header_lede")}{" "}
               <strong className="text-slate-900">{fmtNum(summary.total_rows)}</strong>{" "}
               {tx(lang, "header_lede_q")}{" "}
@@ -154,7 +162,7 @@ export default async function Home({
             )}
 
             {/* Big-stat row — 4 columns on desktop, 2 on mobile */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-8 pt-8 border-t border-slate-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-8 pt-8 border-t border-slate-200 animate-fade-in-up-delay-3">
               <Stat
                 label={tx(lang, "stat_rows")}
                 value={fmtNum(summary.total_rows)}

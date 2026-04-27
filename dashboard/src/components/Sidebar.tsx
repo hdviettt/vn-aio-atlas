@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import type { Lang } from "@/lib/i18n";
+import { CiteButton } from "@/components/CiteButton";
 
 export type FindingNavItem = {
   id: string;
@@ -166,8 +167,8 @@ export function Sidebar({
         </ul>
       </nav>
 
-      {/* External links */}
-      <div className="px-6 py-4 border-t border-slate-200 space-y-1.5">
+      {/* External links + citation */}
+      <div className="px-6 py-4 border-t border-slate-200 space-y-2">
         <a
           href={
             lang === "vi"
@@ -196,6 +197,9 @@ export function Sidebar({
         >
           → GitHub
         </a>
+        <div className="pt-2 border-t border-slate-100 mt-2">
+          <CiteButton lang={lang} />
+        </div>
       </div>
     </>
   );
