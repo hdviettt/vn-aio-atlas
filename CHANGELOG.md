@@ -2,6 +2,28 @@
 
 All notable changes to the Vietnam AI Overview Atlas project. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v0.4] — 2026-04-27
+
+### Added
+
+- **Major dashboard UIUX overhaul.** Single-column scroll-fest replaced with a publication-grade layout: sticky 260px sidebar with finding-list nav (active-section highlighting via IntersectionObserver), Source Serif 4 display font for hero h1 and key-stat numbers, FindingCard component with optional indigo-bordered key-stat callouts, subtle staggered fade-in animations on hero elements (with prefers-reduced-motion support).
+- **Mobile drawer** — sidebar becomes off-canvas with overlay backdrop on mobile.
+- **Print stylesheet** — `@media print` hides sidebar/buttons, removes sticky positioning, prevents section page-breaks, darkens indigo for ink contrast. Save-as-PDF now produces a clean document.
+- **CiteButton component** — bilingual academic citation copy-to-clipboard. Lives in sidebar footer.
+- **"Updated YYYY-MM-DD" freshness indicator** at top of hero, sourced from `MAX(created_at)`.
+- **Deploy guard** (`dashboard/scripts/deploy.mjs` invoked via `npm run deploy`) — verifies Railway link is on `vn-aio-atlas/vn-aio-atlas-dashboard` before upload, auto-relinks if wrong, refuses to deploy on link mismatch. Defends against the cd-induced relink mishap from v0.3.
+- **has_price extraction bug fixed in-place** — `scripts/fix_has_price.py` pulls only `(kr_id, url, has_price)` from SEONGON for the 9,568 SERPs already in `atlas.organic_features`. Lighter query (3 cols) avoided the stalls of the full-row repull. F9 now includes `has_price` showing **−49% relative effect** (cited URLs are 49% less likely to have prices than uncited URLs — AIO devalues commercial-intent pages).
+- **F11 SQL extended** to include `has_price` in the per-vertical heatmap.
+
+### Changed
+
+- F9 has 8 features active now (was 6 + 2 placeholders); has_price moved from "excluded — known bug" to a real signal.
+- F9 dashboard now color-codes positive/negative relative diffs (indigo for pro-cited, rose for pro-uncited).
+
+### Fixed
+
+- Removed the `prefers-color-scheme: dark` default that was inverting the dashboard to white-on-black on dark-mode browsers.
+
 ## [v0.3] — 2026-04-27
 
 ### Added
