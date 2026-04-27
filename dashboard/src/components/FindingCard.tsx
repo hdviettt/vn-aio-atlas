@@ -33,7 +33,7 @@ export function FindingCard({
 
       {keyStat && (
         <div className="my-8 max-w-2xl">
-          <div className="font-numbers text-[3.5rem] md:text-[4.5rem] font-bold text-indigo-700 leading-none mb-3">
+          <div className="font-numbers text-[3.5rem] md:text-[4.5rem] font-bold text-indigo-700 leading-[0.9] mb-3 tabular-nums">
             {keyStat.value}
           </div>
           {keyStat.label && (
@@ -59,9 +59,37 @@ export function FindingCard({
 }
 
 /**
- * Stat is intentionally compact — display fonts are only on titles, NOT
- * on numbers. Numbers belong in sans with tabular-nums so they read as
- * data, not as ornament.
+ * DataRow — definition-list pattern. Label on top in small caps, value
+ * as a sans-numeric below. Pairs with `<dl>` parents. Used in metadata
+ * blocks where space is constrained and Stat (which has more visual
+ * weight) is too prominent.
+ */
+export function DataRow({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div>
+      <dt className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-1.5">
+        {label}
+      </dt>
+      <dd className="font-numbers text-xl md:text-2xl font-semibold text-zinc-900 leading-none whitespace-nowrap">
+        {value}
+      </dd>
+      {sub && <div className="text-xs text-zinc-500 mt-1.5">{sub}</div>}
+    </div>
+  );
+}
+
+/**
+ * Stat — compact, sans tabular-nums, NEVER truncates. If a value is too
+ * wide for its column the column should grow (auto-fit grid) or the
+ * caller should pick a smaller size.
  */
 export function Stat({
   label,
@@ -75,21 +103,21 @@ export function Stat({
   size?: "default" | "large" | "small";
 }) {
   const numClasses = {
-    large: "text-[2rem] md:text-[2.5rem]",
-    default: "text-2xl md:text-3xl",
-    small: "text-lg md:text-xl",
+    large: "text-2xl md:text-3xl",
+    default: "text-xl md:text-2xl",
+    small: "text-base md:text-lg",
   };
   return (
-    <div className="min-w-0">
-      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500 mb-1.5">
+    <div>
+      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-2">
         {label}
       </div>
       <div
-        className={`font-numbers ${numClasses[size]} font-semibold text-zinc-900 leading-none truncate`}
+        className={`font-numbers ${numClasses[size]} font-semibold text-zinc-900 leading-none whitespace-nowrap`}
       >
         {value}
       </div>
-      {sub && <div className="text-xs text-zinc-500 mt-1.5">{sub}</div>}
+      {sub && <div className="text-xs text-zinc-500 mt-2">{sub}</div>}
     </div>
   );
 }

@@ -21,7 +21,7 @@ import { LineChart } from "@/components/charts/LineChart";
 import { Heatmap } from "@/components/charts/Heatmap";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { Sidebar, type FindingNavItem } from "@/components/Sidebar";
-import { FindingCard, Stat } from "@/components/FindingCard";
+import { FindingCard, Stat, DataRow } from "@/components/FindingCard";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -152,7 +152,11 @@ export default async function Home({
         verticals={verticals}
         vertical={vertical}
         lang={lang}
-        labels={{ all: tx(lang, "filter_all"), viewing: tx(lang, "filter_viewing") }}
+        labels={{
+          all: tx(lang, "filter_all"),
+          viewing: tx(lang, "filter_viewing"),
+          languageLabel: lang === "vi" ? "ngôn ngữ" : "language",
+        }}
       />
 
       <main className="flex-1 min-w-0">
@@ -198,62 +202,51 @@ export default async function Home({
               </div>
             )}
 
-            {/* By the numbers — primary stats as a horizontal strip with
-                proper spacing for 7-digit numbers. Secondary stats below
-                as a smaller metadata row. */}
+            {/* Compact metadata block — editorial style. The findings
+                are the story; this section is reference/scope. Each row
+                is a label-value pair with consistent typographic rhythm. */}
             <div className="pt-10 border-t border-zinc-200 animate-fade-in-up-delay-3">
-              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-5">
-                {lang === "vi" ? "theo số liệu" : "by the numbers"}
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-10 lg:gap-x-14 gap-y-7">
-                <Stat
-                  label={tx(lang, "stat_rows")}
-                  value={fmtNum(summary.total_rows)}
-                  size="large"
-                />
-                <Stat
-                  label={tx(lang, "stat_citations")}
-                  value={fmtNum(summary.total_citations)}
-                  size="large"
-                  sub={tx(lang, "stat_citations_sub")}
-                />
-                <Stat
-                  label={tx(lang, "stat_distinct_queries")}
-                  value={fmtNum(summary.distinct_keywords)}
-                  size="large"
-                />
-                <Stat
-                  label={tx(lang, "stat_brand_projects")}
-                  value={fmtNum(summary.distinct_projects)}
-                  size="large"
-                />
-              </div>
-
-              {/* Secondary metadata row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-10 lg:gap-x-14 gap-y-4 mt-10 pt-6 border-t border-zinc-200/70">
-                <Stat
-                  label={tx(lang, "stat_aio_positive")}
-                  value={fmtNum(summary.aio_rows)}
-                  size="small"
-                  sub={`${((summary.aio_rows / summary.total_rows) * 100).toFixed(0)}% ${tx(lang, "stat_aio_subtotal")}`}
-                />
-                <Stat
-                  label={tx(lang, "stat_verticals")}
-                  value={String(summary.distinct_verticals)}
-                  size="small"
-                />
-                <Stat
-                  label={lang === "vi" ? "khoảng thời gian" : "time range"}
-                  value={`${summary.earliest?.slice(5, 10) ?? "—"} → ${summary.latest?.slice(5, 10) ?? "—"}`}
-                  size="small"
-                  sub={summary.latest?.slice(0, 4) ?? ""}
-                />
-                <Stat
-                  label={lang === "vi" ? "phiên dữ liệu" : "snapshots"}
-                  value="459"
-                  size="small"
-                  sub={lang === "vi" ? "lượt thu thập SERP" : "SERP captures"}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                <dl className="space-y-5">
+                  <DataRow
+                    label={tx(lang, "stat_rows")}
+                    value={fmtNum(summary.total_rows)}
+                  />
+                  <DataRow
+                    label={tx(lang, "stat_citations")}
+                    value={fmtNum(summary.total_citations)}
+                    sub={tx(lang, "stat_citations_sub")}
+                  />
+                  <DataRow
+                    label={tx(lang, "stat_distinct_queries")}
+                    value={fmtNum(summary.distinct_keywords)}
+                  />
+                  <DataRow
+                    label={tx(lang, "stat_brand_projects")}
+                    value={fmtNum(summary.distinct_projects)}
+                  />
+                </dl>
+                <dl className="space-y-5">
+                  <DataRow
+                    label={tx(lang, "stat_aio_positive")}
+                    value={fmtNum(summary.aio_rows)}
+                    sub={`${((summary.aio_rows / summary.total_rows) * 100).toFixed(0)}% ${tx(lang, "stat_aio_subtotal")}`}
+                  />
+                  <DataRow
+                    label={tx(lang, "stat_verticals")}
+                    value={String(summary.distinct_verticals)}
+                  />
+                  <DataRow
+                    label={lang === "vi" ? "khoảng thời gian" : "time range"}
+                    value={`${summary.earliest?.slice(0, 10) ?? "—"} — ${summary.latest?.slice(0, 10) ?? "—"}`}
+                    sub={lang === "vi" ? "khoảng 5 tháng" : "approx. 5 months"}
+                  />
+                  <DataRow
+                    label={lang === "vi" ? "phiên dữ liệu" : "snapshots"}
+                    value="459"
+                    sub={lang === "vi" ? "lượt thu thập SERP" : "SERP captures"}
+                  />
+                </dl>
               </div>
             </div>
           </header>

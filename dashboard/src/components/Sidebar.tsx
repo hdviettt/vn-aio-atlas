@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 
 import type { Lang } from "@/lib/i18n";
 import { CiteButton } from "@/components/CiteButton";
+import { Select } from "@/components/ui/Select";
+import { SegmentedToggle } from "@/components/ui/SegmentedToggle";
 
 export type FindingNavItem = {
   id: string;
@@ -23,7 +25,7 @@ export function Sidebar({
   verticals: string[];
   vertical?: string;
   lang: Lang;
-  labels: { all: string; viewing: string };
+  labels: { all: string; viewing: string; languageLabel: string };
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,16 +33,13 @@ export function Sidebar({
   const [activeId, setActiveId] = useState<string>("");
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Track active section on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible.length > 0) {
-          setActiveId(visible[0].target.id);
-        }
+        if (visible.length > 0) setActiveId(visible[0].target.id);
       },
       { rootMargin: "-30% 0px -60% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
@@ -73,15 +72,21 @@ export function Sidebar({
     goWith(next);
   };
 
+  const verticalOptions = [
+    { value: "all", label: labels.all },
+    ...verticals.map((v) => ({ value: v, label: v })),
+  ];
+
   const navContent = (
     <>
-      <div className="px-6 py-7 border-b border-slate-200">
+      {/* Brand */}
+      <div className="px-6 py-7 border-b border-zinc-200">
         <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-600 mb-1">
           atlas
         </div>
         <a
           href={lang === "en" ? "/" : "/?lang=vi"}
-          className="block text-base font-bold tracking-tight text-slate-900 leading-tight hover:text-indigo-700 transition-colors"
+          className="block font-display text-xl font-bold tracking-tight text-zinc-900 leading-tight hover:text-indigo-700 transition-colors"
           onClick={() => setMobileOpen(false)}
         >
           {lang === "vi" ? "AI Overview Việt Nam" : "Vietnam AI Overview"}
@@ -89,60 +94,37 @@ export function Sidebar({
       </div>
 
       {/* Controls */}
-      <div className="px-6 py-5 border-b border-slate-200 space-y-4">
+      <div className="px-6 py-5 border-b border-zinc-200 space-y-4">
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-1.5">
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-1.5">
             {vertical ? labels.viewing : labels.all}
-          </label>
-          <select
+          </div>
+          <Select
             value={vertical ?? "all"}
-            onChange={(e) => updateVertical(e.target.value)}
-            className="w-full border border-slate-300 px-2 py-1.5 text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="all">{labels.all}</option>
-            {verticals.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
+            options={verticalOptions}
+            onChange={updateVertical}
+            ariaLabel={labels.all}
+          />
         </div>
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">
-            {lang === "vi" ? "ngôn ngữ" : "language"}
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-1.5">
+            {labels.languageLabel}
           </div>
-          <div className="inline-flex items-center gap-1 text-xs">
-            <button
-              type="button"
-              onClick={() => updateLang("en")}
-              className={`px-3 py-1 border ${
-                lang === "en"
-                  ? "bg-indigo-600 border-indigo-600 text-white font-bold"
-                  : "border-slate-300 text-slate-600 hover:border-slate-400"
-              }`}
-              aria-pressed={lang === "en"}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={() => updateLang("vi")}
-              className={`px-3 py-1 border ${
-                lang === "vi"
-                  ? "bg-indigo-600 border-indigo-600 text-white font-bold"
-                  : "border-slate-300 text-slate-600 hover:border-slate-400"
-              }`}
-              aria-pressed={lang === "vi"}
-            >
-              VI
-            </button>
-          </div>
+          <SegmentedToggle<Lang>
+            value={lang}
+            options={[
+              { value: "en", label: "EN" },
+              { value: "vi", label: "VI" },
+            ]}
+            onChange={updateLang}
+            ariaLabel={labels.languageLabel}
+          />
         </div>
       </div>
 
       {/* Findings nav */}
       <nav className="px-2 py-4 flex-1 overflow-y-auto">
-        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 px-4">
+        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 mb-2 px-4">
           {lang === "vi" ? "phát hiện" : "findings"}
         </div>
         <ul className="space-y-0.5">
@@ -154,10 +136,10 @@ export function Sidebar({
                 className={`block px-4 py-1.5 text-xs leading-snug border-l-2 transition-colors ${
                   activeId === f.id
                     ? "border-indigo-600 bg-indigo-50 text-indigo-900 font-semibold"
-                    : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    : "border-transparent text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
                 }`}
               >
-                <span className="tabular-nums text-slate-400 mr-2 font-mono">
+                <span className="tabular-nums text-zinc-400 mr-2 font-mono text-[10px]">
                   {f.number.padStart(2, "0")}
                 </span>
                 {f.label}
@@ -168,7 +150,7 @@ export function Sidebar({
       </nav>
 
       {/* External links + citation */}
-      <div className="px-6 py-4 border-t border-slate-200 space-y-2">
+      <div className="px-6 py-4 border-t border-zinc-200 space-y-2">
         <a
           href={
             lang === "vi"
@@ -177,7 +159,7 @@ export function Sidebar({
           }
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-xs text-slate-600 hover:text-indigo-700 transition-colors"
+          className="block text-xs text-zinc-600 hover:text-indigo-700 transition-colors"
         >
           {lang === "vi" ? "→ Báo cáo đầy đủ" : "→ Full report"}
         </a>
@@ -185,7 +167,7 @@ export function Sidebar({
           href="https://github.com/hdviettt/vn-aio-atlas/blob/main/FINDINGS.md"
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-xs text-slate-600 hover:text-indigo-700 transition-colors"
+          className="block text-xs text-zinc-600 hover:text-indigo-700 transition-colors"
         >
           {lang === "vi" ? "→ Tài liệu kết quả" : "→ Findings doc"}
         </a>
@@ -193,11 +175,11 @@ export function Sidebar({
           href="https://github.com/hdviettt/vn-aio-atlas"
           target="_blank"
           rel="noopener noreferrer"
-          className="block text-xs text-slate-600 hover:text-indigo-700 transition-colors"
+          className="block text-xs text-zinc-600 hover:text-indigo-700 transition-colors"
         >
           → GitHub
         </a>
-        <div className="pt-2 border-t border-slate-100 mt-2">
+        <div className="pt-2 border-t border-zinc-100 mt-2">
           <CiteButton lang={lang} />
         </div>
       </div>
@@ -206,29 +188,26 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile menu button */}
       <button
         type="button"
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="md:hidden fixed top-4 left-4 z-30 bg-white border border-slate-300 px-3 py-2 text-sm font-medium shadow-sm"
+        className="md:hidden fixed top-4 left-4 z-30 bg-white border border-zinc-300 px-3 py-2 text-sm font-medium shadow-sm"
         aria-expanded={mobileOpen}
         aria-label="Toggle navigation"
       >
         {mobileOpen ? "✕" : "☰"}
       </button>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-slate-900/40 z-30"
+          className="md:hidden fixed inset-0 bg-zinc-900/40 z-30"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar — desktop sticky, mobile drawer */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-[260px] bg-white border-r border-slate-200 flex flex-col transition-transform md:translate-x-0 ${
+        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-[260px] bg-white border-r border-zinc-200 flex flex-col transition-transform md:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
